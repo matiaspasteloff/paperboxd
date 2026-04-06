@@ -1,4 +1,4 @@
-const BASE = 'http://localhost:8000';
+const BASE = 'https://paperboxd-backend.onrender.com';
 
 const h = (token) => ({
     'Content-Type': 'application/json',
