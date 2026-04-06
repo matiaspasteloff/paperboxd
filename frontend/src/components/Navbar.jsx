@@ -65,21 +65,13 @@ export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) 
 
                 {/* Right side */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {/* Theme switcher */}
-                    <div style={{ position: 'relative', zIndex: 201 }}>
-                        <button onClick={() => { setThemeOpen(o => !o); setMobileOpen(false); }} style={{ background: 'var(--accent-sub)', border: '1px solid var(--border-2)', borderRadius: '8px', padding: '6px 10px', color: 'var(--text-dim)', fontSize: '13px', cursor: 'pointer', fontFamily: "'Figtree',sans-serif" }}>
-                            🎨
-                        </button>
-                        {themeOpen && (
-                            <div className="scaleIn" style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, background: 'var(--surface-2)', border: '1px solid var(--border-2)', borderRadius: '12px', padding: '6px', minWidth: '170px', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', zIndex: 201 }}>
-                                {THEMES.map(t => (
-                                    <button key={t.id} onClick={() => { setTheme(t.id); setThemeOpen(false); }} style={{ width: '100%', padding: '8px 12px', background: theme === t.id ? 'var(--accent-sub)' : 'transparent', border: theme === t.id ? '1px solid var(--border-2)' : '1px solid transparent', borderRadius: '8px', color: theme === t.id ? 'var(--accent-2)' : 'var(--text-dim)', fontSize: '13px', cursor: 'pointer', textAlign: 'left', fontFamily: "'Figtree',sans-serif", fontWeight: theme === t.id ? '600' : '400', marginBottom: '2px' }}>
-                                        {t.label}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                    {/* Theme toggle button - solo el botón dentro del nav */}
+                    <button
+                        onClick={() => { setThemeOpen(o => !o); setMobileOpen(false); }}
+                        style={{ background: 'var(--accent-sub)', border: '1px solid var(--border-2)', borderRadius: '8px', padding: '6px 10px', color: 'var(--text-dim)', fontSize: '13px', cursor: 'pointer', fontFamily: "'Figtree',sans-serif" }}
+                    >
+                        🎨
+                    </button>
 
                     {/* Desktop auth */}
                     {!compact && (
@@ -101,6 +93,28 @@ export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) 
                     )}
                 </div>
             </nav>
+
+            {/* ── THEME DROPDOWN - fuera del nav para evitar stacking context ── */}
+            {themeOpen && (
+                <div className="scaleIn" style={{
+                    position: 'fixed',
+                    top: '66px',
+                    right: '16px',
+                    background: 'var(--surface-2)',
+                    border: '1px solid var(--border-2)',
+                    borderRadius: '12px',
+                    padding: '6px',
+                    minWidth: '170px',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                    zIndex: 300,
+                }}>
+                    {THEMES.map(t => (
+                        <button key={t.id} onClick={() => { setTheme(t.id); setThemeOpen(false); }} style={{ width: '100%', padding: '8px 12px', background: theme === t.id ? 'var(--accent-sub)' : 'transparent', border: theme === t.id ? '1px solid var(--border-2)' : '1px solid transparent', borderRadius: '8px', color: theme === t.id ? 'var(--accent-2)' : 'var(--text-dim)', fontSize: '13px', cursor: 'pointer', textAlign: 'left', fontFamily: "'Figtree',sans-serif", fontWeight: theme === t.id ? '600' : '400', marginBottom: '2px' }}>
+                            {t.label}
+                        </button>
+                    ))}
+                </div>
+            )}
 
             {/* ── MOBILE DROPDOWN MENU ── */}
             {compact && mobileOpen && (
@@ -150,9 +164,14 @@ export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) 
                 )}
             </div>
 
-            {/* Close overlays */}
-            {(themeOpen || mobileOpen) && (
-                <div onClick={() => { setThemeOpen(false); setMobileOpen(false); }} style={{ position: 'fixed', inset: 0, zIndex: compact ? 98 : 150 }} />
+            {/* ── OVERLAYS para cerrar ── */}
+            {mobileOpen && (
+                <div onClick={() => setMobileOpen(false)}
+                    style={{ position: 'fixed', inset: 0, zIndex: 98 }} />
+            )}
+            {themeOpen && (
+                <div onClick={() => setThemeOpen(false)}
+                    style={{ position: 'fixed', inset: 0, zIndex: 299 }} />
             )}
         </>
     );
