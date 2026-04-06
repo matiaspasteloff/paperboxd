@@ -1,5 +1,6 @@
 const BASE = 'http://localhost:8000';
 
+
 const h = (token) => ({
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
