@@ -99,13 +99,13 @@ export default function Home({ user, token, onAuthClick, navigate }) {
                     letterSpacing: '-2px', lineHeight: 0.95,
                     marginBottom: '22px', color: '#ddeeff',
                 }}>
-                    Los libros
+                    PAPER
                     <br />
                     <span style={{
                         background: 'linear-gradient(135deg, #388bfd 0%, #79bbff 100%)',
                         WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                     }}>
-                        que te forman
+                        BOXD
                     </span>
                 </h1>
 
