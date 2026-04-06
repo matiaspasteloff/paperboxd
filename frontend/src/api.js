@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = 'https://paperboxd-backend.onrender.com';
 
 export const api = {
     register: async ({ username, email, password }) => {
