@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../api';
 import BookCard from '../components/BookCard';
 import ReviewModal from '../components/ReviewModal';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const SUBJECTS = [
     { id: 'science_fiction', label: '🚀 Ciencia Ficción' },
@@ -15,11 +16,13 @@ const SUBJECTS = [
 ];
 
 export default function Explore({ user, token, onAuthClick, navigate }) {
+    const { isMobile, lt } = useBreakpoint();
     const [trending, setTrending] = useState([]);
     const [subjects, setSubjects] = useState({});
     const [loadT, setLoadT] = useState(true);
     const [selected, setSelected] = useState(null);
     const [toast, setToast] = useState('');
+    const pad = isMobile ? '16px' : lt(1024) ? '24px' : '36px';
 
     useEffect(() => {
         api.getTrending().then(d => {
@@ -32,8 +35,7 @@ export default function Explore({ user, token, onAuthClick, navigate }) {
             setTrending(works);
         }).catch(() => { }).finally(() => setLoadT(false));
 
-        // Load first 2 subjects
-        ['science_fiction', 'fantasy'].forEach(s => loadSubject(s));
+        ['science_fiction', 'fantasy'].forEach(loadSubject);
     }, []);
 
     const loadSubject = async (s) => {
@@ -53,37 +55,42 @@ export default function Explore({ user, token, onAuthClick, navigate }) {
 
     return (
         <div style={{ minHeight: '100vh', paddingTop: '58px' }}>
-            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
             {toast && <div className="fadeUp" style={{ position: 'fixed', top: '70px', left: '50%', transform: 'translateX(-50%)', background: 'var(--surface-2)', border: '1px solid var(--success)', borderRadius: '10px', padding: '12px 22px', color: 'var(--success)', fontSize: '14px', fontWeight: '600', zIndex: 300 }}>✓ {toast}</div>}
 
-            <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '52px 36px 80px' }}>
-                <h1 style={{ fontSize: 'clamp(28px,5vw,44px)', marginBottom: '8px' }}>Explorar libros</h1>
-                <p style={{ color: 'var(--text-muted)', fontSize: '15px', marginBottom: '40px' }}>Descubrí tendencias, géneros y colecciones curadas por la comunidad.</p>
+            <div style={{ maxWidth: '1280px', margin: '0 auto', padding: `${isMobile ? '36px' : '52px'} ${pad} 80px` }}>
+                <h1 style={{ fontSize: isMobile ? '26px' : 'clamp(26px,5vw,40px)', marginBottom: '6px' }}>Explorar libros</h1>
+                <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '32px' }}>Descubrí tendencias y géneros populares</p>
 
-                {/* Subject filter chips */}
-                <div className="tabs-scroll" style={{ marginBottom: '48px' }}>
+                {/* Subject chips */}
+                <div className="tabs-scroll" style={{ marginBottom: '44px' }}>
                     {SUBJECTS.map(s => (
-                        <button key={s.id} onClick={() => loadSubject(s.id)} style={{
-                            padding: '9px 18px', borderRadius: '100px', fontSize: '13px', fontWeight: '500', whiteSpace: 'nowrap',
-                            background: subjects[s.id] ? 'var(--accent)' : 'var(--surface)',
-                            color: subjects[s.id] ? '#fff' : 'var(--text-dim)',
-                            border: `1px solid ${subjects[s.id] ? 'var(--accent)' : 'var(--border-2)'}`,
-                            cursor: 'pointer', fontFamily: "'Figtree',sans-serif", transition: 'all 0.15s',
-                        }}>{s.label}</button>
+                        <button key={s.id} onClick={() => loadSubject(s.id)} style={{ padding: '8px 16px', borderRadius: '100px', fontSize: '13px', fontWeight: '500', whiteSpace: 'nowrap', background: subjects[s.id] ? 'var(--accent)' : 'var(--surface)', color: subjects[s.id] ? '#fff' : 'var(--text-dim)', border: `1px solid ${subjects[s.id] ? 'var(--accent)' : 'var(--border-2)'}`, cursor: 'pointer', fontFamily: "'Figtree',sans-serif", transition: 'all 0.15s' }}>{s.label}</button>
                     ))}
                 </div>
 
                 {/* Trending */}
                 <Section title="📈 Tendencias semanales">
-                    {loadT ? <SkelGrid n={8} /> : (
-                        <Grid books={trending} navigate={navigate} user={user} onAuthClick={onAuthClick} setSelected={setSelected} />
+                    {loadT ? <div className="book-grid">{Array.from({ length: 8 }).map((_, i) => <div key={i} className="skeleton" style={{ paddingTop: '148%', borderRadius: '10px' }} />)}</div> : (
+                        <div className="book-grid">
+                            {trending.map((book, i) => (
+                                <div key={book.key || i} className="fadeUp" style={{ animationDelay: `${i * 0.03}s` }}>
+                                    <BookCard book={book} onNavigate={b => navigate('book', b)} onRate={b => { if (!user) { onAuthClick(); return; } setSelected(b); }} loggedIn={!!user} />
+                                </div>
+                            ))}
+                        </div>
                     )}
                 </Section>
 
                 {/* Subjects */}
                 {SUBJECTS.map(s => subjects[s.id] && (
                     <Section key={s.id} title={s.label}>
-                        <Grid books={subjects[s.id]} navigate={navigate} user={user} onAuthClick={onAuthClick} setSelected={setSelected} />
+                        <div className="book-grid">
+                            {subjects[s.id].map((book, i) => (
+                                <div key={book.key || i} className="fadeUp" style={{ animationDelay: `${i * 0.03}s` }}>
+                                    <BookCard book={book} onNavigate={b => navigate('book', b)} onRate={b => { if (!user) { onAuthClick(); return; } setSelected(b); }} loggedIn={!!user} />
+                                </div>
+                            ))}
+                        </div>
                     </Section>
                 ))}
             </div>
@@ -95,32 +102,12 @@ export default function Explore({ user, token, onAuthClick, navigate }) {
 
 function Section({ title, children }) {
     return (
-        <div style={{ marginBottom: '52px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '22px' }}>
-                <h2 style={{ fontSize: '20px', whiteSpace: 'nowrap' }}>{title}</h2>
+        <div style={{ marginBottom: '48px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '20px' }}>
+                <h2 style={{ whiteSpace: 'nowrap' }}>{title}</h2>
                 <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
             </div>
             {children}
-        </div>
-    );
-}
-
-function Grid({ books, navigate, user, onAuthClick, setSelected }) {
-    return (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(148px, 1fr))', gap: '14px' }}>
-            {books.map((book, i) => (
-                <div key={book.key || i} className="fadeUp" style={{ animationDelay: `${i * 0.035}s` }}>
-                    <BookCard book={book} onNavigate={b => navigate('book', b)} onRate={b => { if (!user) { onAuthClick(); return; } setSelected(b); }} loggedIn={!!user} />
-                </div>
-            ))}
-        </div>
-    );
-}
-
-function SkelGrid({ n }) {
-    return (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(148px, 1fr))', gap: '14px' }}>
-            {Array.from({ length: n }).map((_, i) => <div key={i} className="skeleton" style={{ paddingTop: '148%', borderRadius: '10px' }} />)}
         </div>
     );
 }

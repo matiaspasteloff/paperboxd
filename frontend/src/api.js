@@ -1,5 +1,6 @@
 const BASE = 'https://paperboxd-backend.onrender.com';
 
+
 const h = (token) => ({
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
