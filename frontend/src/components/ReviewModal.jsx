@@ -2,16 +2,23 @@ import { useState } from 'react';
 import { api } from '../api';
 import StarRating from './StarRating';
 
+const MOODS = ['oscuro', 'emotivo', 'relajante', 'romántico', 'filosófico', 'épico', 'humorístico', 'misterioso'];
+const PACES = ['lento', 'moderado', 'rápido'];
+const GENRES = ['ficción', 'no ficción', 'fantasía', 'ciencia ficción', 'romance', 'thriller', 'historia', 'poesía', 'ensayo', 'terror', 'autoayuda', 'infantil'];
+
 export default function ReviewModal({ book, token, onClose, onSuccess }) {
     const [rating, setRating] = useState(0);
     const [text, setText] = useState('');
+    const [selectedMoods, setMoods] = useState([]);
+    const [pace, setPace] = useState('');
+    const [genre, setGenre] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
     const workId = book.key?.replace('/works/', '') || '';
-    const coverUrl = book.cover_i
-        ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
-        : null;
+    const coverUrl = book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg` : null;
+
+    const toggleMood = (m) => setMoods(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]);
 
     const submit = async () => {
         if (!rating) { setError('Seleccioná al menos 1 estrella'); return; }
@@ -19,130 +26,82 @@ export default function ReviewModal({ book, token, onClose, onSuccess }) {
         try {
             await api.createReview(token, {
                 open_library_work_id: workId,
-                rating,
-                review_text: text.trim() || null,
+                rating, review_text: text.trim() || null,
+                mood_tags: selectedMoods.join(','),
+                pace_tag: pace, genre,
             });
             onSuccess();
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
+        } catch (err) { setError(err.message); }
+        finally { setLoading(false); }
     };
 
     return (
-        <div
-            className="fadeIn"
-            onClick={(e) => e.target === e.currentTarget && onClose()}
-            style={{
-                position: 'fixed', inset: 0, zIndex: 200,
-                background: 'rgba(3,11,22,0.85)',
-                backdropFilter: 'blur(10px)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}
-        >
-            <div
-                className="scaleIn"
-                style={{
-                    background: 'linear-gradient(160deg, #06111f 0%, #091828 100%)',
-                    border: '1px solid rgba(56,139,253,0.2)',
-                    borderRadius: '20px', padding: '36px',
-                    width: '100%', maxWidth: '460px', margin: '16px',
-                    boxShadow: '0 0 60px rgba(56,139,253,0.1), 0 24px 80px rgba(0,0,0,0.7)',
-                    position: 'relative',
-                }}
-            >
-                <button onClick={onClose} style={{
-                    position: 'absolute', top: '14px', right: '16px',
-                    background: 'transparent', border: 'none',
-                    color: '#3d6080', fontSize: '22px', cursor: 'pointer',
-                }}>×</button>
+        <div className="fadeIn" onClick={(e) => e.target === e.currentTarget && onClose()} style={{
+            position: 'fixed', inset: 0, zIndex: 200,
+            background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
+        }}>
+            <div className="scaleIn" style={{
+                background: 'var(--surface)', border: '1px solid var(--border-2)',
+                borderRadius: '20px', padding: '32px',
+                width: '100%', maxWidth: '500px',
+                maxHeight: '90vh', overflowY: 'auto',
+                boxShadow: '0 24px 80px rgba(0,0,0,0.7)',
+                position: 'relative',
+            }}>
+                <button onClick={onClose} style={{ position: 'absolute', top: '14px', right: '16px', background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '22px', cursor: 'pointer' }}>×</button>
 
                 {/* Book header */}
-                <div style={{
-                    display: 'flex', gap: '16px', alignItems: 'flex-start',
-                    marginBottom: '28px', paddingBottom: '24px',
-                    borderBottom: '1px solid rgba(56,139,253,0.1)',
-                }}>
-                    <div style={{
-                        width: '56px', height: '82px', borderRadius: '7px',
-                        overflow: 'hidden', flexShrink: 0, background: '#0d2038',
-                        border: '1px solid rgba(56,139,253,0.15)',
-                    }}>
-                        {coverUrl
-                            ? <img src={coverUrl} alt={book.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>📖</div>
-                        }
+                <div style={{ display: 'flex', gap: '14px', marginBottom: '24px', paddingBottom: '20px', borderBottom: '1px solid var(--border)' }}>
+                    <div style={{ width: '52px', height: '76px', borderRadius: '6px', overflow: 'hidden', flexShrink: 0, background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+                        {coverUrl ? <img src={coverUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>📖</span>}
                     </div>
-                    <div style={{ flex: 1 }}>
-                        <h3 style={{ fontSize: '17px', lineHeight: 1.3, marginBottom: '4px' }}>{book.title}</h3>
-                        {book.author_name?.[0] && (
-                            <p style={{ fontSize: '13px', color: '#3d6080' }}>{book.author_name[0]}</p>
-                        )}
-                        {book.first_publish_year && (
-                            <p style={{ fontSize: '12px', color: '#1e3a52', marginTop: '2px' }}>{book.first_publish_year}</p>
-                        )}
+                    <div>
+                        <h3 style={{ fontSize: '16px', lineHeight: 1.3, marginBottom: '4px' }}>{book.title}</h3>
+                        {book.author_name?.[0] && <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{book.author_name[0]}</p>}
                     </div>
                 </div>
 
-                {/* Rating */}
-                <div style={{ marginBottom: '20px' }}>
-                    <Label>Tu calificación</Label>
+                <Section label="Calificación">
                     <StarRating value={rating} onChange={setRating} size="xl" showLabel />
-                </div>
+                </Section>
 
-                {/* Review text */}
-                <div style={{ marginBottom: '20px' }}>
-                    <Label>Reseña <span style={{ color: '#1e3a52', fontWeight: 400 }}>(opcional)</span></Label>
-                    <textarea
-                        value={text}
-                        onChange={(e) => setText(e.target.value)}
-                        placeholder="¿Qué te pareció el libro?"
-                        style={{
-                            width: '100%', minHeight: '100px',
-                            background: '#0d2038',
-                            border: '1px solid rgba(56,139,253,0.15)',
-                            borderRadius: '10px',
-                            color: '#ddeeff', fontSize: '14px',
-                            padding: '12px 14px', resize: 'vertical',
-                            fontFamily: "'Figtree', sans-serif", lineHeight: 1.65,
-                            outline: 'none', transition: 'border-color 0.18s, box-shadow 0.18s',
-                        }}
-                        onFocus={e => { e.target.style.borderColor = 'rgba(56,139,253,0.4)'; e.target.style.boxShadow = '0 0 0 3px rgba(56,139,253,0.08)'; }}
-                        onBlur={e => { e.target.style.borderColor = 'rgba(56,139,253,0.15)'; e.target.style.boxShadow = 'none'; }}
-                    />
-                </div>
+                <Section label="Reseña (opcional)">
+                    <textarea value={text} onChange={e => setText(e.target.value)} placeholder="¿Qué te pareció?" style={{ width: '100%', minHeight: '88px', background: 'var(--surface-3)', border: '1px solid var(--border)', borderRadius: '10px', color: 'var(--text)', fontSize: '14px', padding: '11px 14px', resize: 'vertical', fontFamily: "'Figtree',sans-serif", lineHeight: 1.65, outline: 'none', transition: 'border-color 0.18s' }} onFocus={e => (e.target.style.borderColor = 'var(--border-3)')} onBlur={e => (e.target.style.borderColor = 'var(--border)')} />
+                </Section>
 
-                {error && <p style={{ color: '#f85149', fontSize: '13px', marginBottom: '12px' }}>{error}</p>}
+                <Section label="Estado de ánimo del libro">
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        {MOODS.map(m => (
+                            <Tag key={m} active={selectedMoods.includes(m)} onClick={() => toggleMood(m)}>{m}</Tag>
+                        ))}
+                    </div>
+                </Section>
 
-                <div style={{ display: 'flex', gap: '10px' }}>
-                    <button
-                        onClick={onClose}
-                        style={{
-                            padding: '12px 20px', background: 'transparent',
-                            border: '1px solid rgba(56,139,253,0.15)', borderRadius: '10px',
-                            color: '#7fafd4', cursor: 'pointer', fontSize: '14px',
-                            fontFamily: "'Figtree', sans-serif", transition: 'all 0.15s',
-                        }}
-                        onMouseEnter={e => { e.target.style.borderColor = 'rgba(56,139,253,0.3)'; e.target.style.color = '#ddeeff'; }}
-                        onMouseLeave={e => { e.target.style.borderColor = 'rgba(56,139,253,0.15)'; e.target.style.color = '#7fafd4'; }}
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        onClick={submit}
-                        disabled={loading}
-                        style={{
-                            flex: 1, padding: '12px',
-                            background: loading ? '#1a3f6f' : 'linear-gradient(135deg, #388bfd, #1a6bcc)',
-                            color: '#fff', fontWeight: '700', fontSize: '15px',
-                            borderRadius: '10px', border: 'none',
-                            cursor: loading ? 'not-allowed' : 'pointer',
-                            fontFamily: "'Figtree', sans-serif",
-                            boxShadow: loading ? 'none' : '0 0 16px rgba(56,139,253,0.3)',
-                            transition: 'all 0.18s',
-                        }}
-                    >
+                <Section label="Ritmo de lectura">
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                        {PACES.map(p => <Tag key={p} active={pace === p} onClick={() => setPace(pace === p ? '' : p)}>{p}</Tag>)}
+                    </div>
+                </Section>
+
+                <Section label="Género">
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        {GENRES.map(g => <Tag key={g} active={genre === g} onClick={() => setGenre(genre === g ? '' : g)}>{g}</Tag>)}
+                    </div>
+                </Section>
+
+                {error && <p style={{ color: 'var(--danger)', fontSize: '13px', marginBottom: '12px' }}>{error}</p>}
+
+                <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+                    <button className="btn-ghost" onClick={onClose} style={{ padding: '12px 20px' }}>Cancelar</button>
+                    <button onClick={submit} disabled={loading} style={{
+                        flex: 1, padding: '12px', background: loading ? 'var(--surface-3)' : 'var(--accent)',
+                        color: loading ? 'var(--text-muted)' : '#fff',
+                        fontWeight: '700', fontSize: '15px', borderRadius: '10px', border: 'none',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        fontFamily: "'Figtree',sans-serif",
+                        boxShadow: loading ? 'none' : '0 0 16px var(--accent-glow)', transition: 'all 0.18s',
+                    }}>
                         {loading ? 'Guardando...' : 'Guardar reseña'}
                     </button>
                 </div>
@@ -151,12 +110,24 @@ export default function ReviewModal({ book, token, onClose, onSuccess }) {
     );
 }
 
-function Label({ children }) {
+function Section({ label, children }) {
     return (
-        <label style={{
-            display: 'block', fontSize: '11px', fontWeight: '600',
-            color: '#7fafd4', marginBottom: '10px',
-            letterSpacing: '0.6px', textTransform: 'uppercase',
-        }}>{children}</label>
+        <div style={{ marginBottom: '18px' }}>
+            <p style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-dim)', letterSpacing: '0.6px', textTransform: 'uppercase', marginBottom: '10px' }}>{label}</p>
+            {children}
+        </div>
+    );
+}
+
+function Tag({ active, onClick, children }) {
+    const [hov, setHov] = useState(false);
+    return (
+        <button onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{
+            padding: '5px 12px', borderRadius: '100px', fontSize: '12px', fontWeight: active ? '600' : '400',
+            background: active ? 'var(--accent)' : hov ? 'var(--accent-sub)' : 'var(--surface-3)',
+            color: active ? '#fff' : hov ? 'var(--accent-2)' : 'var(--text-muted)',
+            border: `1px solid ${active ? 'var(--accent)' : hov ? 'var(--border-2)' : 'var(--border)'}`,
+            cursor: 'pointer', transition: 'all 0.15s', fontFamily: "'Figtree',sans-serif",
+        }}>{children}</button>
     );
 }
