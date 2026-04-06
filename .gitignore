@@ -1,0 +1,12 @@
+# Entorno virtual de Python
+venv/
+__pycache__/
+*.pyc
+
+# Variables de entorno (¡SECRETOS!)
+.env
+
+# Dependencias de React
+node_modules/
+dist/
+.DS_Store
