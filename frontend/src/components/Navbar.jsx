@@ -19,15 +19,15 @@ const NAV_LINKS = [
 ];
 
 export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) {
-  const [scrolled,    setScrolled]   = useState(false);
-  const [themeOpen,   setThemeOpen]  = useState(false);
-  const [mobileOpen,  setMobileOpen] = useState(false);
-  const [searchQ,     setSearchQ]    = useState('');
-  const [searchRes,   setSearchRes]  = useState([]);
-  const [searchOpen,  setSearchOpen] = useState(false);
+  const [scrolled,   setScrolled]  = useState(false);
+  const [themeOpen,  setThemeOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchQ,    setSearchQ]   = useState('');
+  const [searchRes,  setSearchRes] = useState([]);
+  const [searchOpen, setSearchOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const { isMobile, isTablet } = useBreakpoint();
-  const compact  = isMobile || isTablet;
+  const compact   = isMobile || isTablet;
   const searchRef = useRef(null);
 
   useEffect(() => {
@@ -36,7 +36,6 @@ export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) 
     return () => window.removeEventListener('scroll', fn);
   }, []);
 
-  // Search with debounce
   useEffect(() => {
     if (!searchQ.trim()) { setSearchRes([]); return; }
     const t = setTimeout(async () => {
@@ -48,9 +47,14 @@ export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) 
     return () => clearTimeout(t);
   }, [searchQ]);
 
-  const go = (name, data = null) => { navigate(name, data); setMobileOpen(false); setSearchOpen(false); setSearchQ(''); };
+  const go = (name, data = null) => {
+    navigate(name, data);
+    setMobileOpen(false);
+    setSearchOpen(false);
+    setSearchQ('');
+  };
 
-  const goProfile = (username) => { go('profile', username); };
+  const goProfile = (username) => go('profile', username);
 
   return (
     <>
@@ -74,10 +78,8 @@ export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) 
 
         {/* Search bar — desktop */}
         {!compact && (
-          <div style={{ position: 'relative', flex: 1, maxWidth: '240px' }} ref={searchRef}>
-            <div style={{ display: 'flex', alignItems: 'center', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden', transition: 'border-color 0.2s' }}
-              onFocus={() => setSearchOpen(true)}
-            >
+          <div style={{ position: 'relative', flex: 1, maxWidth: '240px', zIndex: 101 }} ref={searchRef}>
+            <div style={{ display: 'flex', alignItems: 'center', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden' }}>
               <span style={{ padding: '0 10px', color: 'var(--text-muted)', fontSize: '14px', flexShrink: 0 }}>🔍</span>
               <input
                 value={searchQ}
@@ -88,7 +90,7 @@ export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) 
               />
             </div>
             {searchOpen && searchRes.length > 0 && (
-              <div className="scaleIn" style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, background: 'var(--surface-2)', border: '1px solid var(--border-2)', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', zIndex: 200 }}>
+              <div className="scaleIn" style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, background: 'var(--surface-2)', border: '1px solid var(--border-2)', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', zIndex: 300 }}>
                 {searchRes.slice(0, 6).map(u => (
                   <div key={u.id} onClick={() => goProfile(u.username)} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)', transition: 'background 0.15s' }}
                     onMouseEnter={e => (e.currentTarget.style.background = 'var(--accent-sub)')}
@@ -109,24 +111,17 @@ export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) 
 
         {/* Right */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-          {/* Theme */}
-          <div style={{ position: 'relative' }}>
-            <button onClick={() => { setThemeOpen(o => !o); setMobileOpen(false); }} style={{ background: 'var(--accent-sub)', border: '1px solid var(--border-2)', borderRadius: '8px', padding: '6px 10px', color: 'var(--text-dim)', fontSize: '13px', cursor: 'pointer' }}>🎨</button>
-            {themeOpen && (
-              <div className="scaleIn" style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, background: 'var(--surface-2)', border: '1px solid var(--border-2)', borderRadius: '12px', padding: '6px', minWidth: '170px', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', zIndex: 200 }}>
-                {THEMES.map(t => (
-                  <button key={t.id} onClick={() => { setTheme(t.id); setThemeOpen(false); }} style={{ width: '100%', padding: '8px 12px', background: theme === t.id ? 'var(--accent-sub)' : 'transparent', border: theme === t.id ? '1px solid var(--border-2)' : '1px solid transparent', borderRadius: '8px', color: theme === t.id ? 'var(--accent-2)' : 'var(--text-dim)', fontSize: '13px', cursor: 'pointer', textAlign: 'left', fontFamily: "'Figtree',sans-serif", fontWeight: theme === t.id ? '600' : '400', marginBottom: '2px' }}>{t.label}</button>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Theme — solo el botón dentro del nav */}
+          <button
+            onClick={() => { setThemeOpen(o => !o); setMobileOpen(false); }}
+            style={{ background: 'var(--accent-sub)', border: '1px solid var(--border-2)', borderRadius: '8px', padding: '6px 10px', color: 'var(--text-dim)', fontSize: '13px', cursor: 'pointer' }}
+          >🎨</button>
 
           {/* Desktop auth */}
           {!compact && (
             user ? (
               <>
                 <NavBtn active={page.name === 'dashboard'} onClick={() => go('dashboard')}>📚 Biblioteca</NavBtn>
-                {/* Avatar → own profile */}
                 <button onClick={() => goProfile(user.username)} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--accent-sub)', border: '1px solid var(--border-2)', borderRadius: '10px', padding: '5px 12px', cursor: 'pointer', transition: 'all 0.15s' }}
                   onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--border-3)')}
                   onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border-2)')}
@@ -150,12 +145,23 @@ export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) 
         </div>
       </nav>
 
+      {/* ── THEME DROPDOWN — fuera del nav para escapar su stacking context ── */}
+      {themeOpen && (
+        <div className="scaleIn" style={{ position: 'fixed', top: '66px', right: '16px', background: 'var(--surface-2)', border: '1px solid var(--border-2)', borderRadius: '12px', padding: '6px', minWidth: '170px', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', zIndex: 300 }}>
+          {THEMES.map(t => (
+            <button key={t.id} onClick={() => { setTheme(t.id); setThemeOpen(false); }} style={{ width: '100%', padding: '8px 12px', background: theme === t.id ? 'var(--accent-sub)' : 'transparent', border: theme === t.id ? '1px solid var(--border-2)' : '1px solid transparent', borderRadius: '8px', color: theme === t.id ? 'var(--accent-2)' : 'var(--text-dim)', fontSize: '13px', cursor: 'pointer', textAlign: 'left', fontFamily: "'Figtree',sans-serif", fontWeight: theme === t.id ? '600' : '400', marginBottom: '2px' }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* ── MOBILE DROPDOWN ── */}
       {compact && mobileOpen && (
         <div className="fadeIn" style={{ position: 'fixed', top: '58px', left: 0, right: 0, zIndex: 99, background: 'var(--surface)', borderBottom: '1px solid var(--border-2)', padding: '12px 16px 20px', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
           {/* Mobile search */}
           <div style={{ position: 'relative', marginBottom: '12px' }}>
-            <input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder="Buscar usuarios..." style={{ width: '100%', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: '10px', color: 'var(--text)', fontSize: '16px', padding: '10px 14px', outline: 'none', fontFamily: "'Figtree',sans-serif" }} />
+            <input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder="Buscar usuarios..." style={{ width: '100%', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: '10px', color: 'var(--text)', fontSize: '16px', padding: '10px 14px', outline: 'none', fontFamily: "'Figtree',sans-serif", boxSizing: 'border-box' }} />
             {searchRes.length > 0 && (
               <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border-2)', borderRadius: '10px', overflow: 'hidden', marginTop: '6px' }}>
                 {searchRes.slice(0, 5).map(u => (
@@ -218,9 +224,15 @@ export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) 
         )}
       </div>
 
-      {/* Close overlays */}
-      {(themeOpen || mobileOpen || searchOpen) && (
-        <div onClick={() => { setThemeOpen(false); setMobileOpen(false); setSearchOpen(false); }} style={{ position: 'fixed', inset: 0, zIndex: compact ? 98 : 199 }} />
+      {/* ── OVERLAYS separados para no interferirse ── */}
+      {mobileOpen && (
+        <div onClick={() => setMobileOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 98 }} />
+      )}
+      {themeOpen && (
+        <div onClick={() => setThemeOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 299 }} />
+      )}
+      {searchOpen && !mobileOpen && (
+        <div onClick={() => { setSearchOpen(false); setSearchQ(''); setSearchRes([]); }} style={{ position: 'fixed', inset: 0, zIndex: 200 }} />
       )}
     </>
   );
@@ -228,7 +240,7 @@ export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) 
 
 export function Avatar({ name, color = '#388bfd', size = 36 }) {
   const colors = ['#388bfd', '#cc88ff', '#55cc88', '#ff8855', '#ffcc44', '#ff5577', '#44cccc'];
-  const bg     = color || colors[name.charCodeAt(0) % colors.length];
+  const bg = color || colors[name.charCodeAt(0) % colors.length];
   return (
     <div style={{ width: `${size}px`, height: `${size}px`, borderRadius: '50%', background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: `${size * 0.42}px`, fontWeight: '700', color: '#fff', fontFamily: "'Syne',sans-serif", flexShrink: 0, border: '2px solid rgba(255,255,255,0.1)' }}>
       {name[0].toUpperCase()}

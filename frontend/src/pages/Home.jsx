@@ -54,7 +54,6 @@ export default function Home({ user, token, onAuthClick, navigate }) {
     finally { setLoading(false); }
   }, [query]);
 
-  // ✅ Fix: clicking the same mood deselects and clears results
   const handleMoodClick = async (mood) => {
     if (activeMood === mood.id) {
       // Deselect
@@ -94,8 +93,8 @@ export default function Home({ user, token, onAuthClick, navigate }) {
         <div className="fadeUp badge" style={{ animationDelay: '0.05s', marginBottom: '24px' }}>✦ Tu diario de lectura personal</div>
 
         <h1 className="fadeUp" style={{ animationDelay: '0.15s', fontFamily: "'Syne',sans-serif", fontSize: isMobile ? '42px' : 'clamp(46px,9vw,96px)', fontWeight: 800, letterSpacing: isMobile ? '-1.5px' : '-2px', lineHeight: 0.95, marginBottom: '18px' }}>
-          Los libros<br />
-          <span style={{ background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-3) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>que te forman</span>
+          PAPER<br />
+          <span style={{ background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-3) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>BOXD</span>
         </h1>
 
         <p className="fadeUp" style={{ animationDelay: '0.25s', fontSize: isMobile ? '15px' : '17px', color: 'var(--text-muted)', maxWidth: '420px', lineHeight: 1.7, marginBottom: '36px' }}>
