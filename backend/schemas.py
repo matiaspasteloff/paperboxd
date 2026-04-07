@@ -18,16 +18,47 @@ class UserResponse(BaseModel):
     id: int
     username: str
     email: str
+    bio: Optional[str] = ""
+    avatar_color: Optional[str] = "#388bfd"
+    favorite_genres: Optional[str] = ""
+    favorite_moods: Optional[str] = ""
+    location: Optional[str] = ""
+    website: Optional[str] = ""
     theme: str
     reading_goal: int
+    is_private: bool
+    joined_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
 
 
 class UserUpdate(BaseModel):
+    bio: Optional[str] = None
+    avatar_color: Optional[str] = None
+    favorite_genres: Optional[str] = None
+    favorite_moods: Optional[str] = None
+    location: Optional[str] = None
+    website: Optional[str] = None
     theme: Optional[str] = None
     reading_goal: Optional[int] = None
+    is_private: Optional[bool] = None
+
+
+class PublicProfile(BaseModel):
+    id: int
+    username: str
+    bio: Optional[str] = ""
+    avatar_color: Optional[str] = "#388bfd"
+    favorite_genres: Optional[str] = ""
+    favorite_moods: Optional[str] = ""
+    location: Optional[str] = ""
+    website: Optional[str] = ""
+    joined_at: Optional[datetime] = None
+    followers_count: int = 0
+    following_count: int = 0
+    reviews_count: int = 0
+    is_following: bool = False
 
 
 class ReviewCreate(BaseModel):
