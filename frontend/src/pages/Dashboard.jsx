@@ -4,7 +4,7 @@ import StarRating from '../components/StarRating';
 import QuoteCard from '../components/QuoteCard';
 import { Avatar } from '../components/Navbar';
 import { useBreakpoint } from '../hooks/useBreakpoint';
-import RecommendationsTab from './RecommendationsTab'; 
+import { RecommendationsTab } from "./RecommendationsTab";
 
 const TABS = [
   { id: 'feed',            label: '📰 Feed' },
