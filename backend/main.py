@@ -13,20 +13,42 @@ import models, schemas, auth
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="PaperBoxd API v3")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+
+# ── CORS ──────────────────────────────────────────────────────────────────────
+# Allow your Vercel domain + localhost for development.
+# Add any custom domain here too.
+ALLOWED_ORIGINS = [
+    "https://paperboxd.vercel.app",
+    "https://paperboxd.com",
+    "https://www.paperboxd.com",
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+]
+
+# Also allow any *.vercel.app preview deployments
+class AllowVercelMiddleware:
+    pass
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 oauth2_optional = OAuth2PasswordBearer(tokenUrl="login", auto_error=False)
 
-# 👈 Aca cargamos tu clave desde las variables de entorno de Render
 GOOGLE_BOOKS_API_KEY = os.getenv("GOOGLE_BOOKS_API_KEY")
 
 # ── SIMPLE IN-MEMORY CACHE ────────────────────────────────────────────────────
-# Structure: { key: (timestamp_float, data) }
 _cache: dict = {}
 
 def cache_get(key: str, ttl: int = 300):
-    """Return cached value if it exists and is within TTL, else None."""
     entry = _cache.get(key)
     if entry and (time.time() - entry[0]) < ttl:
         return entry[1]
@@ -36,7 +58,6 @@ def cache_set(key: str, data):
     _cache[key] = (time.time(), data)
 
 def cache_invalidate(prefix: str):
-    """Remove all cache entries whose key starts with prefix."""
     for k in list(_cache.keys()):
         if k.startswith(prefix):
             del _cache[k]
@@ -71,13 +92,10 @@ def get_optional_user(token: str = Depends(oauth2_optional), db: Session = Depen
 # ── GOOGLE BOOKS HELPERS ──────────────────────────────────────────────────────
 
 async def gb_search(query: str, max_results: int = 8) -> list[dict]:
-    """Search Google Books API and return adapted book dicts."""
-    
-    # 👈 Preparamos los parámetros de búsqueda incluyendo la API KEY
     params = {
-        "q": query, 
-        "maxResults": max_results, 
-        "printType": "books", 
+        "q": query,
+        "maxResults": max_results,
+        "printType": "books",
         "orderBy": "relevance"
     }
     if GOOGLE_BOOKS_API_KEY:
@@ -87,7 +105,7 @@ async def gb_search(query: str, max_results: int = 8) -> list[dict]:
         try:
             r = await c.get(
                 "https://www.googleapis.com/books/v1/volumes",
-                params=params, # 👈 Acá se la pasamos
+                params=params,
             )
             if r.status_code != 200:
                 return []
@@ -119,7 +137,6 @@ async def gb_search(query: str, max_results: int = 8) -> list[dict]:
     return result
 
 
-# Mood → Google Books search query mapping
 MOOD_QUERIES = {
     "oscuro":      "dark literary fiction depression",
     "emotivo":     "emotional drama grief family",
@@ -147,11 +164,19 @@ GENRE_QUERIES = {
 }
 
 
-# ── AUTH ENDPOINTS ────────────────────────────────────────────────────────────
+# ── HEALTH CHECK ─────────────────────────────────────────────────────────────
 
 @app.get("/")
-def root(): return {"status": "ok"}
+def root():
+    return {"status": "ok"}
 
+@app.get("/health")
+def health():
+    """Lightweight ping to wake up Render's free tier."""
+    return {"status": "ok"}
+
+
+# ── AUTH ENDPOINTS ────────────────────────────────────────────────────────────
 
 @app.post("/users/", response_model=schemas.UserResponse)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
@@ -184,7 +209,6 @@ def update_me(data: schemas.UserUpdate, db: Session = Depends(get_db),
     for field, value in data.dict(exclude_none=True).items():
         setattr(current_user, field, value)
     db.commit(); db.refresh(current_user)
-    # Bust recommendation cache when preferences change
     cache_invalidate(f"recs_{current_user.id}")
     return current_user
 
@@ -311,7 +335,6 @@ def get_feed(db: Session = Depends(get_db), current_user: models.User = Depends(
 
 @app.get("/books/{work_id}/reviews")
 def get_book_reviews(work_id: str, db: Session = Depends(get_db)):
-    """Public reviews for a book — cached 60 s."""
     cache_key = f"book_reviews_{work_id}"
     cached = cache_get(cache_key, ttl=60)
     if cached is not None:
@@ -348,7 +371,6 @@ def create_review(review: schemas.ReviewCreate, db: Session = Depends(get_db),
         existing = models.Review(**review.dict(), user_id=current_user.id)
         db.add(existing); db.commit(); db.refresh(existing)
 
-    # Bust public reviews cache and user recommendations
     cache_invalidate(f"book_reviews_{review.open_library_work_id}")
     cache_invalidate(f"recs_{current_user.id}")
     return existing
@@ -386,10 +408,6 @@ async def get_recommendations(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    """
-    Personalised book recommendations based on the user's review history.
-    Results are cached 5 minutes per user.
-    """
     cache_key = f"recs_{current_user.id}"
     cached = cache_get(cache_key, ttl=300)
     if cached is not None:
@@ -405,14 +423,12 @@ async def get_recommendations(
 
     already_read = {r.open_library_work_id for r in reviews}
 
-    # ── Cold-start: no reviews yet ──
     if not reviews:
         books = await gb_search("bestseller fiction popular 2024", max_results=16)
         result = [b for b in books if b["google_books_id"] not in already_read][:12]
         cache_set(cache_key, result)
         return result
 
-    # ── Analyse preferences (weight higher-rated items more) ──
     genre_scores: dict[str, float] = {}
     mood_scores:  dict[str, float] = {}
 
@@ -426,7 +442,6 @@ async def get_recommendations(
                 if tag:
                     mood_scores[tag] = mood_scores.get(tag, 0) + weight
 
-    # Also consider explicit profile preferences
     if current_user.favorite_genres:
         for g in current_user.favorite_genres.split(","):
             g = g.strip()
@@ -438,7 +453,6 @@ async def get_recommendations(
             if m:
                 mood_scores[m] = mood_scores.get(m, 0) + 1.0
 
-    # Build ranked query list (genre first, then mood, then fallback)
     queries: list[str] = []
 
     if genre_scores:
@@ -454,7 +468,6 @@ async def get_recommendations(
     if not queries:
         queries = ["bestseller fiction"]
 
-    # ── Fetch & deduplicate ──
     seen_gids: set[str] = set()
     results: list[dict] = []
 

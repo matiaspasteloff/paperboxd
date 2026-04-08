@@ -1,7 +1,7 @@
 import { adaptGoogleBook, SUBJECT_QUERY_MAP } from './utils/googleBooks';
 
 const API_KEY = import.meta.env.VITE_GOOGLE_BOOKS_API_KEY;
-const BASE = 'https://paperboxd-backend.onrender.com';
+const BASE = import.meta.env.VITE_API_BASE_URL || 'https://paperboxd-backend.onrender.com';
 const GB = 'https://www.googleapis.com/books/v1';
 
 const h = (token) => ({
@@ -9,11 +9,20 @@ const h = (token) => ({
   ...(token ? { Authorization: `Bearer ${token}` } : {}),
 });
 
-const call = async (url, opts = {}) => {
-  const res = await fetch(url, opts);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || 'Error del servidor');
-  return data;
+const call = async (url, opts = {}, retries = 1) => {
+  try {
+    const res = await fetch(url, opts);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Error del servidor');
+    return data;
+  } catch (err) {
+    // Render free tier cold start: retry once after 3s
+    if (retries > 0 && (err.message === 'Failed to fetch' || err.name === 'TypeError')) {
+      await new Promise(r => setTimeout(r, 3000));
+      return call(url, opts, retries - 1);
+    }
+    throw err;
+  }
 };
 
 /** Fetch from Google Books and return adapted books, filtered to those with covers */
@@ -21,7 +30,7 @@ const gbFetch = async (params, maxResults = 16) => {
   const qs = new URLSearchParams({
     printType: 'books',
     maxResults: String(maxResults),
-    key: API_KEY, 
+    key: API_KEY,
     ...params,
   });
   try {
@@ -94,38 +103,22 @@ export const api = {
   getRecommendations: (token) => call(`${BASE}/recommendations/`, { headers: h(token) }),
 
   // ── Google Books API ──────────────────────────────────────────────────────
-
-  /**
-   * Full-text book search.
-   * Returns { docs: AdaptedBook[] } to keep compatibility with existing callers.
-   */
   searchBooks: async (q) => {
     const books = await gbFetch({ q: q.trim(), orderBy: 'relevance' }, 16);
     return { docs: books };
   },
 
-  /**
-   * Weekly trending approximation — Google Books doesn't expose a trending feed,
-   * so we query high-relevance popular fiction titles.
-   */
   getTrending: async () => {
     const books = await gbFetch({ q: 'bestseller fiction 2024', orderBy: 'relevance' }, 16);
     return { works: books };
   },
 
-  /**
-   * Subject/category browsing.
-   * Returns { works: AdaptedBook[] }.
-   */
   getSubject: async (s) => {
     const q = SUBJECT_QUERY_MAP[s] || `subject:${s}`;
     const books = await gbFetch({ q, orderBy: 'relevance' }, 8);
     return { works: books };
   },
 
-  /**
-   * Fetch full details for a single Google Books volume (used in BookDetail).
-   */
   getBookDetails: async (volumeId) => {
     try {
       const r = await fetch(`${GB}/volumes/${volumeId}?key=${API_KEY}`);
