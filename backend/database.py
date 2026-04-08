@@ -5,7 +5,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
+_raw_url = os.getenv("DATABASE_URL", "")
+if _raw_url.startswith("postgres://"):
+    _raw_url = _raw_url.replace("postgres://", "postgresql://", 1)
+
+SQLALCHEMY_DATABASE_URL = _raw_url
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
