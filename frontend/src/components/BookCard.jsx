@@ -2,7 +2,10 @@ import { useState } from 'react';
 
 export default function BookCard({ book, onRate, onNavigate, loggedIn, compact = false }) {
   const [hov, setHov] = useState(false);
-  const coverUrl = book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg` : null;
+
+  // Support both Google Books (cover_url) and legacy OpenLibrary (cover_i) covers
+  const coverUrl = book.cover_url
+    || (book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg` : null);
 
   return (
     <div
@@ -27,6 +30,13 @@ export default function BookCard({ book, onRate, onNavigate, loggedIn, compact =
               <span style={{ fontSize:'10px', color:'var(--text-muted)', textAlign:'center', padding:'0 6px' }}>Sin portada</span>
             </div>
         }
+
+        {/* Google Books rating badge */}
+        {book.average_rating && (
+          <div style={{ position:'absolute', top:'8px', left:'8px', background:'rgba(0,0,0,0.75)', borderRadius:'6px', padding:'2px 6px', fontSize:'10px', color:'var(--star)', fontWeight:'700', backdropFilter:'blur(4px)' }}>
+            ★ {book.average_rating.toFixed(1)}
+          </div>
+        )}
 
         <div style={{
           position:'absolute', inset:0,

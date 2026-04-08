@@ -4,44 +4,48 @@ import StarRating from '../components/StarRating';
 import QuoteCard from '../components/QuoteCard';
 import { Avatar } from '../components/Navbar';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { RecommendationsTab } from "./RecommendationsTab";
 
 const TABS = [
-  { id: 'feed',      label: '📰 Feed' },
-  { id: 'library',   label: '📚 Biblioteca' },
-  { id: 'progress',  label: '📖 Leyendo' },
-  { id: 'stats',     label: '📊 Stats' },
-  { id: 'challenge', label: '🏆 Reto' },
-  { id: 'dnf',       label: '🚫 DNF' },
-  { id: 'quotes',    label: '✨ Citas' },
+  { id: 'feed',            label: '📰 Feed' },
+  { id: 'recommendations', label: '✨ Para vos' },
+  { id: 'library',         label: '📚 Biblioteca' },
+  { id: 'progress',        label: '📖 Leyendo' },
+  { id: 'stats',           label: '📊 Stats' },
+  { id: 'challenge',       label: '🏆 Reto' },
+  { id: 'dnf',             label: '🚫 DNF' },
+  { id: 'quotes',          label: '✨ Citas' },
 ];
 
-export default function Dashboard({ user, token, navigate, updateUser }) {
+export default function Dashboard({ user, token, navigate, updateUser, onAuthClick }) {
   const { isMobile, lt } = useBreakpoint();
-  const [tab,       setTab]       = useState('feed');
-  const [reviews,   setReviews]   = useState([]);
-  const [progress,  setProgress]  = useState([]);
-  const [dnf,       setDnf]       = useState([]);
-  const [quotes,    setQuotes]    = useState([]);
-  const [stats,     setStats]     = useState(null);
-  const [feed,      setFeed]      = useState([]);
-  const [loading,   setLoading]   = useState(true);
-  const [showQuote, setShowQuote] = useState(false);
-  const [goal,      setGoal]      = useState(user?.reading_goal || 0);
-  const [editGoal,  setEditGoal]  = useState(false);
+  const [tab,             setTab]             = useState('feed');
+  const [reviews,         setReviews]         = useState([]);
+  const [progress,        setProgress]        = useState([]);
+  const [dnf,             setDnf]             = useState([]);
+  const [quotes,          setQuotes]          = useState([]);
+  const [stats,           setStats]           = useState(null);
+  const [feed,            setFeed]            = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
+  const [loading,         setLoading]         = useState(true);
+  const [showQuote,       setShowQuote]       = useState(false);
+  const [goal,            setGoal]            = useState(user?.reading_goal || 0);
+  const [editGoal,        setEditGoal]        = useState(false);
   const pad = isMobile ? '16px' : lt(1024) ? '24px' : '36px';
 
   const load = async () => {
     setLoading(true);
     try {
-      const [r, p, d, q, s, f] = await Promise.all([
+      const [r, p, d, q, s, f, recs] = await Promise.all([
         api.getMyReviews(token),
         api.getProgress(token),
         api.getDNF(token),
         api.getQuotes(token),
         api.getStats(token),
         api.getFeed(token),
+        api.getRecommendations(token).catch(() => [])
       ]);
-      setReviews(r); setProgress(p); setDnf(d); setQuotes(q); setStats(s); setFeed(f);
+      setReviews(r); setProgress(p); setDnf(d); setQuotes(q); setStats(s); setFeed(f); setRecommendations(recs);
     } catch {} finally { setLoading(false); }
   };
 
@@ -107,13 +111,14 @@ export default function Dashboard({ user, token, navigate, updateUser }) {
       <div style={{ maxWidth: '1240px', margin: '0 auto', padding: `0 ${pad} 80px` }}>
         {loading ? <LoadingGrid /> : (
           <>
-            {tab === 'feed'      && <FeedTab feed={feed} navigate={navigate} isMobile={isMobile} />}
-            {tab === 'library'   && <LibraryTab reviews={reviews} navigate={navigate} isMobile={isMobile} />}
-            {tab === 'progress'  && <ProgressTab progress={progress} token={token} onUpdate={load} isMobile={isMobile} />}
-            {tab === 'stats'     && <StatsTab stats={stats} isMobile={isMobile} />}
-            {tab === 'challenge' && <ChallengeTab stats={stats} goal={goal} setGoal={setGoal} editGoal={editGoal} setEditGoal={setEditGoal} saveGoal={saveGoal} challengePct={challengePct} totalFinished={totalFinished} isMobile={isMobile} />}
-            {tab === 'dnf'       && <DNFTab dnf={dnf} token={token} onUpdate={load} />}
-            {tab === 'quotes'    && <QuotesTab quotes={quotes} token={token} onUpdate={load} onNew={() => setShowQuote(true)} isMobile={isMobile} />}
+            {tab === 'feed'            && <FeedTab feed={feed} navigate={navigate} isMobile={isMobile} />}
+            {tab === 'recommendations' && <RecommendationsTab recs={recommendations} loading={loading} navigate={navigate} user={user} token={token} onAuthClick={onAuthClick} />}
+            {tab === 'library'         && <LibraryTab reviews={reviews} navigate={navigate} isMobile={isMobile} />}
+            {tab === 'progress'        && <ProgressTab progress={progress} token={token} onUpdate={load} isMobile={isMobile} />}
+            {tab === 'stats'           && <StatsTab stats={stats} isMobile={isMobile} />}
+            {tab === 'challenge'       && <ChallengeTab stats={stats} goal={goal} setGoal={setGoal} editGoal={editGoal} setEditGoal={setEditGoal} saveGoal={saveGoal} challengePct={challengePct} totalFinished={totalFinished} isMobile={isMobile} />}
+            {tab === 'dnf'             && <DNFTab dnf={dnf} token={token} onUpdate={load} />}
+            {tab === 'quotes'          && <QuotesTab quotes={quotes} token={token} onUpdate={load} onNew={() => setShowQuote(true)} isMobile={isMobile} />}
           </>
         )}
       </div>

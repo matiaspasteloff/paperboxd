@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from jose import JWTError, jwt
 from typing import Optional
-import httpx, asyncio
+import httpx, asyncio, time
 
 from database import engine, Base, get_db
 import models, schemas, auth
@@ -18,6 +18,28 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 oauth2_optional = OAuth2PasswordBearer(tokenUrl="login", auto_error=False)
 
+# ── SIMPLE IN-MEMORY CACHE ────────────────────────────────────────────────────
+# Structure: { key: (timestamp_float, data) }
+_cache: dict = {}
+
+def cache_get(key: str, ttl: int = 300):
+    """Return cached value if it exists and is within TTL, else None."""
+    entry = _cache.get(key)
+    if entry and (time.time() - entry[0]) < ttl:
+        return entry[1]
+    return None
+
+def cache_set(key: str, data):
+    _cache[key] = (time.time(), data)
+
+def cache_invalidate(prefix: str):
+    """Remove all cache entries whose key starts with prefix."""
+    for k in list(_cache.keys()):
+        if k.startswith(prefix):
+            del _cache[k]
+
+
+# ── AUTH HELPERS ──────────────────────────────────────────────────────────────
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     exc = HTTPException(status_code=401, detail="Token inválido o expirado", headers={"WWW-Authenticate": "Bearer"})
@@ -43,7 +65,75 @@ def get_optional_user(token: str = Depends(oauth2_optional), db: Session = Depen
         return None
 
 
-# ── AUTH ──────────────────────────────────────────────────────────────────────
+# ── GOOGLE BOOKS HELPERS ──────────────────────────────────────────────────────
+
+async def gb_search(query: str, max_results: int = 8) -> list[dict]:
+    """Search Google Books API and return adapted book dicts."""
+    async with httpx.AsyncClient(timeout=6) as c:
+        try:
+            r = await c.get(
+                "https://www.googleapis.com/books/v1/volumes",
+                params={"q": query, "maxResults": max_results, "printType": "books", "orderBy": "relevance"},
+            )
+            if r.status_code != 200:
+                return []
+            items = r.json().get("items", [])
+        except Exception:
+            return []
+
+    result = []
+    for item in items:
+        info = item.get("volumeInfo", {})
+        raw_cover = (info.get("imageLinks") or {}).get("thumbnail", "")
+        cover = raw_cover.replace("http://", "https://").replace("zoom=1", "zoom=2") if raw_cover else None
+        if not cover:
+            continue
+        pub_date = info.get("publishedDate", "")
+        result.append({
+            "key":                f"/works/{item['id']}",
+            "google_books_id":    item["id"],
+            "title":              info.get("title", ""),
+            "author_name":        info.get("authors", []),
+            "cover_url":          cover,
+            "first_publish_year": int(pub_date[:4]) if pub_date and pub_date[:4].isdigit() else None,
+            "description":        (info.get("description") or "")[:300],
+            "categories":         info.get("categories", []),
+            "page_count":         info.get("pageCount", 0),
+            "average_rating":     info.get("averageRating"),
+            "ratings_count":      info.get("ratingsCount", 0),
+        })
+    return result
+
+
+# Mood → Google Books search query mapping
+MOOD_QUERIES = {
+    "oscuro":      "dark literary fiction depression",
+    "emotivo":     "emotional drama grief family",
+    "relajante":   "cozy gentle feel-good fiction",
+    "épico":       "epic adventure fantasy war",
+    "misterioso":  "mystery thriller detective suspense",
+    "filosófico":  "philosophy ethics meaning of life",
+    "romántico":   "romance love relationship",
+    "humorístico": "humor comedy satire fiction",
+}
+
+GENRE_QUERIES = {
+    "ficción":          "literary fiction",
+    "no ficción":       "nonfiction bestseller",
+    "fantasía":         "subject:fantasy",
+    "ciencia ficción":  "subject:science fiction",
+    "romance":          "subject:romance",
+    "thriller":         "thriller crime fiction",
+    "historia":         "subject:history",
+    "poesía":           "subject:poetry",
+    "terror":           "subject:horror",
+    "autoayuda":        "self help personal development",
+    "ensayo":           "essays nonfiction",
+    "clásicos":         "subject:classics",
+}
+
+
+# ── AUTH ENDPOINTS ────────────────────────────────────────────────────────────
 
 @app.get("/")
 def root(): return {"status": "ok"}
@@ -80,10 +170,12 @@ def update_me(data: schemas.UserUpdate, db: Session = Depends(get_db),
     for field, value in data.dict(exclude_none=True).items():
         setattr(current_user, field, value)
     db.commit(); db.refresh(current_user)
+    # Bust recommendation cache when preferences change
+    cache_invalidate(f"recs_{current_user.id}")
     return current_user
 
 
-# ── SOCIAL: PROFILES & FOLLOWERS ─────────────────────────────────────────────
+# ── SOCIAL: PROFILES & FOLLOWERS ──────────────────────────────────────────────
 
 @app.get("/users/search")
 def search_users(q: str, db: Session = Depends(get_db)):
@@ -180,7 +272,6 @@ def get_following(username: str, db: Session = Depends(get_db)):
 
 @app.get("/feed/")
 def get_feed(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    """Activity feed: latest reviews from people I follow"""
     following_ids = [f.following_id for f in db.query(models.Follower).filter(models.Follower.follower_id == current_user.id).all()]
     if not following_ids:
         return []
@@ -206,6 +297,12 @@ def get_feed(db: Session = Depends(get_db), current_user: models.User = Depends(
 
 @app.get("/books/{work_id}/reviews")
 def get_book_reviews(work_id: str, db: Session = Depends(get_db)):
+    """Public reviews for a book — cached 60 s."""
+    cache_key = f"book_reviews_{work_id}"
+    cached = cache_get(cache_key, ttl=60)
+    if cached is not None:
+        return cached
+
     reviews = db.query(models.Review).filter(models.Review.open_library_work_id == work_id)\
                 .order_by(models.Review.id.desc()).all()
     result = []
@@ -217,6 +314,7 @@ def get_book_reviews(work_id: str, db: Session = Depends(get_db)):
                        "mood_tags": r.mood_tags, "pace_tag": r.pace_tag, "genre": r.genre,
                        "open_library_work_id": r.open_library_work_id,
                        "created_at": r.created_at.isoformat() if r.created_at else None})
+    cache_set(cache_key, result)
     return result
 
 
@@ -231,9 +329,15 @@ def create_review(review: schemas.ReviewCreate, db: Session = Depends(get_db),
         existing.rating = review.rating; existing.review_text = review.review_text
         existing.mood_tags = review.mood_tags; existing.pace_tag = review.pace_tag
         existing.genre = review.genre
-        db.commit(); db.refresh(existing); return existing
-    new = models.Review(**review.dict(), user_id=current_user.id)
-    db.add(new); db.commit(); db.refresh(new); return new
+        db.commit(); db.refresh(existing)
+    else:
+        existing = models.Review(**review.dict(), user_id=current_user.id)
+        db.add(existing); db.commit(); db.refresh(existing)
+
+    # Bust public reviews cache and user recommendations
+    cache_invalidate(f"book_reviews_{review.open_library_work_id}")
+    cache_invalidate(f"recs_{current_user.id}")
+    return existing
 
 
 async def fetch_book_data(work_id: str):
@@ -259,6 +363,101 @@ async def get_my_reviews(db: Session = Depends(get_db),
              "mood_tags": r.mood_tags, "pace_tag": r.pace_tag, "genre": r.genre,
              "created_at": r.created_at.isoformat() if r.created_at else None}
             for r, b in zip(reviews, books_data)]
+
+
+# ── RECOMMENDATIONS ───────────────────────────────────────────────────────────
+
+@app.get("/recommendations/")
+async def get_recommendations(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """
+    Personalised book recommendations based on the user's review history.
+    Results are cached 5 minutes per user.
+    """
+    cache_key = f"recs_{current_user.id}"
+    cached = cache_get(cache_key, ttl=300)
+    if cached is not None:
+        return cached
+
+    reviews = (
+        db.query(models.Review)
+        .filter(models.Review.user_id == current_user.id)
+        .order_by(models.Review.id.desc())
+        .limit(50)
+        .all()
+    )
+
+    already_read = {r.open_library_work_id for r in reviews}
+
+    # ── Cold-start: no reviews yet ──
+    if not reviews:
+        books = await gb_search("bestseller fiction popular 2024", max_results=16)
+        result = [b for b in books if b["google_books_id"] not in already_read][:12]
+        cache_set(cache_key, result)
+        return result
+
+    # ── Analyse preferences (weight higher-rated items more) ──
+    genre_scores: dict[str, float] = {}
+    mood_scores:  dict[str, float] = {}
+
+    for r in reviews:
+        weight = r.rating / 5.0
+        if r.genre:
+            genre_scores[r.genre] = genre_scores.get(r.genre, 0) + weight
+        if r.mood_tags:
+            for tag in r.mood_tags.split(","):
+                tag = tag.strip()
+                if tag:
+                    mood_scores[tag] = mood_scores.get(tag, 0) + weight
+
+    # Also consider explicit profile preferences
+    if current_user.favorite_genres:
+        for g in current_user.favorite_genres.split(","):
+            g = g.strip()
+            if g:
+                genre_scores[g] = genre_scores.get(g, 0) + 1.0
+    if current_user.favorite_moods:
+        for m in current_user.favorite_moods.split(","):
+            m = m.strip()
+            if m:
+                mood_scores[m] = mood_scores.get(m, 0) + 1.0
+
+    # Build ranked query list (genre first, then mood, then fallback)
+    queries: list[str] = []
+
+    if genre_scores:
+        for g in sorted(genre_scores, key=genre_scores.get, reverse=True)[:2]:
+            if g in GENRE_QUERIES:
+                queries.append(GENRE_QUERIES[g])
+
+    if mood_scores:
+        for m in sorted(mood_scores, key=mood_scores.get, reverse=True)[:2]:
+            if m in MOOD_QUERIES:
+                queries.append(MOOD_QUERIES[m])
+
+    if not queries:
+        queries = ["bestseller fiction"]
+
+    # ── Fetch & deduplicate ──
+    seen_gids: set[str] = set()
+    results: list[dict] = []
+
+    fetch_tasks = [gb_search(q, max_results=8) for q in queries[:4]]
+    all_books = await asyncio.gather(*fetch_tasks)
+
+    for batch in all_books:
+        for book in batch:
+            gid = book.get("google_books_id", "")
+            wid = book.get("key", "").replace("/works/", "")
+            if gid not in seen_gids and wid not in already_read:
+                seen_gids.add(gid)
+                results.append(book)
+
+    final = results[:20]
+    cache_set(cache_key, final)
+    return final
 
 
 # ── PROGRESS ──────────────────────────────────────────────────────────────────
@@ -350,6 +549,10 @@ def delete_quote(qid: int, db: Session = Depends(get_db),
 
 @app.get("/lists/")
 def get_public_lists(db: Session = Depends(get_db)):
+    cached = cache_get("public_lists", ttl=30)
+    if cached is not None:
+        return cached
+
     lists = db.query(models.BookList).filter(models.BookList.is_public == True).order_by(models.BookList.id.desc()).all()
     result = []
     for bl in lists:
@@ -359,6 +562,7 @@ def get_public_lists(db: Session = Depends(get_db)):
                        "owner_name": owner.username if owner else "?",
                        "likes_count": len(bl.likes), "books_count": len(bl.items),
                        "items": [{"open_library_work_id": i.open_library_work_id, "book_title": i.book_title, "cover_url": i.cover_url} for i in bl.items[:4]]})
+    cache_set("public_lists", result)
     return result
 
 
@@ -374,7 +578,9 @@ def get_my_lists(db: Session = Depends(get_db), current_user: models.User = Depe
 def create_list(data: schemas.BookListCreate, db: Session = Depends(get_db),
                 current_user: models.User = Depends(get_current_user)):
     new = models.BookList(**data.dict(), user_id=current_user.id)
-    db.add(new); db.commit(); db.refresh(new); return {"id": new.id, "title": new.title}
+    db.add(new); db.commit(); db.refresh(new)
+    cache_invalidate("public_lists")
+    return {"id": new.id, "title": new.title}
 
 
 @app.post("/lists/{list_id}/items")
@@ -383,7 +589,9 @@ def add_to_list(list_id: int, item: schemas.ListItemCreate, db: Session = Depend
     bl = db.query(models.BookList).filter(models.BookList.id == list_id, models.BookList.user_id == current_user.id).first()
     if not bl: raise HTTPException(404)
     new = models.ListItem(**item.dict(), list_id=list_id)
-    db.add(new); db.commit(); return {"ok": True}
+    db.add(new); db.commit()
+    cache_invalidate("public_lists")
+    return {"ok": True}
 
 
 @app.post("/lists/{list_id}/like")
@@ -391,9 +599,13 @@ def toggle_like(list_id: int, db: Session = Depends(get_db),
                 current_user: models.User = Depends(get_current_user)):
     like = db.query(models.ListLike).filter(models.ListLike.list_id == list_id, models.ListLike.user_id == current_user.id).first()
     if like:
-        db.delete(like); db.commit(); return {"liked": False}
+        db.delete(like); db.commit()
+        cache_invalidate("public_lists")
+        return {"liked": False}
     new = models.ListLike(list_id=list_id, user_id=current_user.id)
-    db.add(new); db.commit(); return {"liked": True}
+    db.add(new); db.commit()
+    cache_invalidate("public_lists")
+    return {"liked": True}
 
 
 # ── CLUBS ─────────────────────────────────────────────────────────────────────
@@ -430,7 +642,7 @@ def get_messages(club_id: int, chapter: Optional[int] = None, db: Session = Depe
 
 
 @app.post("/clubs/{club_id}/messages")
-def post_message(club_id: int, data: schemas.ClubMessageCreate, db: Session = Depends(get_db),current_user: models.User = Depends(get_current_user)):
+def post_message(club_id: int, data: schemas.ClubMessageCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     club = db.query(models.BookClub).filter(models.BookClub.id == club_id).first()
     if not club: raise HTTPException(404)
     new = models.ClubMessage(club_id=club_id, user_id=current_user.id, content=data.content, chapter=data.chapter)
@@ -446,7 +658,10 @@ def post_message(club_id: int, data: schemas.ClubMessageCreate, db: Session = De
 def get_stats(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     reviews  = db.query(models.Review).filter(models.Review.user_id == current_user.id).all()
     dnf      = db.query(models.DNFBook).filter(models.DNFBook.user_id == current_user.id).all()
-    finished = db.query(models.ReadingProgress).filter(models.ReadingProgress.user_id == current_user.id, models.ReadingProgress.status == "finished").count()
+    finished = db.query(models.ReadingProgress).filter(
+        models.ReadingProgress.user_id == current_user.id,
+        models.ReadingProgress.status == "finished"
+    ).count()
 
     genres, mood_counts, rating_dist, monthly = {}, {}, {1:0,2:0,3:0,4:0,5:0}, {}
     for r in reviews:
