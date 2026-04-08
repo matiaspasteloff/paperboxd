@@ -7,17 +7,20 @@ import { useBreakpoint } from '../hooks/useBreakpoint';
 
 export default function BookDetail({ book, user, token, onAuthClick, navigate }) {
   const { isMobile, lt } = useBreakpoint();
-  const [reviews,    setReviews]   = useState([]);
-  const [progress,   setProgress]  = useState(null);
-  const [loading,    setLoading]   = useState(true);
-  const [showReview, setShowReview] = useState(false);
-  const [showProg,   setShowProg]  = useState(false);
-  const [showDNF,    setShowDNF]   = useState(false);
-  const [dnfReason,  setDnfReason] = useState('');
-  const [toast,      setToast]     = useState('');
+  const [reviews,     setReviews]   = useState([]);
+  const [progress,    setProgress]  = useState(null);
+  const [details,     setDetails]   = useState(null);   // enriched Google Books data
+  const [loading,     setLoading]   = useState(true);
+  const [showReview,  setShowReview] = useState(false);
+  const [showProg,    setShowProg]  = useState(false);
+  const [showDNF,     setShowDNF]   = useState(false);
+  const [dnfReason,   setDnfReason] = useState('');
+  const [toast,       setToast]     = useState('');
 
   const workId   = book.key?.replace('/works/', '') || '';
-  const coverUrl = book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg` : null;
+  // Support both Google Books cover_url and legacy OpenLibrary cover_i
+  const coverUrl = book.cover_url
+    || (book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg` : null);
   const pad      = isMobile ? '16px' : lt(1024) ? '24px' : '32px';
 
   const loadReviews = async () => {
@@ -32,8 +35,16 @@ export default function BookDetail({ book, user, token, onAuthClick, navigate })
     } catch {} finally { setLoading(false); }
   };
 
-  useEffect(() => { loadReviews(); }, [workId]);
+  // Fetch enriched details from Google Books if we have a volume ID
+  useEffect(() => {
+    loadReviews();
+    const isGoogleId = workId && !workId.startsWith('OL');
+    if (isGoogleId && !book.description) {
+      api.getBookDetails(workId).then(d => d && setDetails(d)).catch(() => {});
+    }
+  }, [workId]);
 
+  const merged = { ...book, ...(details || {}) };
   const avgRating = reviews.length ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : null;
   const ratingDist = [5, 4, 3, 2, 1].map(s => ({ s, c: reviews.filter(r => Math.round(r.rating) === s).length }));
   const maxC = Math.max(...ratingDist.map(d => d.c), 1);
@@ -68,9 +79,23 @@ export default function BookDetail({ book, user, token, onAuthClick, navigate })
         <div style={{ flex: 1, minWidth: 0 }}>
           <h1 className="fadeUp" style={{ fontSize: isMobile ? '22px' : 'clamp(22px,4vw,38px)', lineHeight: 1.15, marginBottom: '8px' }}>{book.title}</h1>
           {book.author_name?.[0] && <p style={{ color: 'var(--text-dim)', fontSize: isMobile ? '14px' : '16px', marginBottom: '4px' }}>por <span style={{ color: 'var(--accent-2)' }}>{book.author_name[0]}</span></p>}
-          {book.first_publish_year && <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '18px' }}>Primera edición: {book.first_publish_year}</p>}
 
-          {/* Rating summary */}
+          {/* Meta row */}
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px', fontSize: '12px', color: 'var(--text-muted)' }}>
+            {(merged.first_publish_year) && <span>📅 {merged.first_publish_year}</span>}
+            {merged.page_count > 0 && <span>📄 {merged.page_count} pág.</span>}
+            {merged.publisher && <span>🏢 {merged.publisher}</span>}
+            {merged.categories?.[0] && <span>🏷 {merged.categories[0]}</span>}
+          </div>
+
+          {/* Google Books community rating */}
+          {merged.average_rating && (
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(255,193,7,0.1)', border: '1px solid rgba(255,193,7,0.25)', borderRadius: '8px', padding: '5px 12px', marginBottom: '16px', fontSize: '12px', color: 'var(--star)' }}>
+              ★ {merged.average_rating.toFixed(1)} · {merged.ratings_count?.toLocaleString()} valoraciones (Google)
+            </div>
+          )}
+
+          {/* PaperBoxd rating summary */}
           {avgRating && (
             <div style={{ display: 'inline-flex', gap: isMobile ? '12px' : '18px', alignItems: 'center', background: 'var(--accent-sub)', border: '1px solid var(--border-2)', borderRadius: '12px', padding: isMobile ? '12px 14px' : '16px 22px', marginBottom: '18px', flexWrap: 'wrap' }}>
               <div>
@@ -111,6 +136,16 @@ export default function BookDetail({ book, user, token, onAuthClick, navigate })
           </div>
         </div>
       </div>
+
+      {/* ── DESCRIPTION ── */}
+      {(merged.description) && (
+        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: `0 ${pad} 28px` }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '14px', padding: isMobile ? '16px' : '22px 28px' }}>
+            <h2 style={{ fontSize: '16px', marginBottom: '12px' }}>📖 Sinopsis</h2>
+            <p style={{ color: 'var(--text-dim)', fontSize: '14px', lineHeight: 1.75 }}>{merged.description}</p>
+          </div>
+        </div>
+      )}
 
       {/* ── REVIEWS ── */}
       <div style={{ borderTop: '1px solid var(--border)', maxWidth: '1100px', margin: '0 auto', padding: `36px ${pad} 80px` }}>

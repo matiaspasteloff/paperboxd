@@ -22,12 +22,47 @@ function parseJwt(t) {
   catch { return null; }
 }
 
+/** Update <title> and og:title meta tag dynamically */
+function useDynamicSEO(page, user) {
+  useEffect(() => {
+    const PAGE_TITLES = {
+      home:      'PaperBoxd – Tu diario de lectura personal',
+      explore:   'Explorar libros – PaperBoxd',
+      lists:     'Listas temáticas – PaperBoxd',
+      clubs:     'Clubes de Lectura – PaperBoxd',
+      dashboard: user ? `@${user.username} · Mi biblioteca – PaperBoxd` : 'Mi biblioteca – PaperBoxd',
+    };
+
+    let title = PAGE_TITLES[page.name] || 'PaperBoxd';
+
+    // Enrich title for specific pages
+    if (page.name === 'book' && page.data?.title) {
+      title = `${page.data.title} – PaperBoxd`;
+    }
+    if (page.name === 'profile' && page.data) {
+      title = `@${page.data} – PaperBoxd`;
+    }
+
+    document.title = title;
+
+    // Update og:title if present
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) ogTitle.setAttribute('content', title);
+
+    // Update twitter:title if present
+    const twTitle = document.querySelector('meta[name="twitter:title"]');
+    if (twTitle) twTitle.setAttribute('content', title);
+  }, [page, user]);
+}
+
 export default function App() {
   const [theme,    setThemeState] = useState(() => localStorage.getItem(THEME_KEY) || 'dark-blue');
   const [page,     setPage]       = useState({ name: 'home', data: null });
   const [token,    setToken]      = useState(() => localStorage.getItem(TOKEN_KEY));
   const [user,     setUser]       = useState(() => { try { return JSON.parse(localStorage.getItem(USER_KEY)); } catch { return null; } });
   const [showAuth, setShowAuth]   = useState(false);
+
+  useDynamicSEO(page, user);
 
   const setTheme = (t) => {
     setThemeState(t);

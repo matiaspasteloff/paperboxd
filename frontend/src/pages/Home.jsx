@@ -6,40 +6,34 @@ import ProgressModal from '../components/ProgressModal';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const MOOD_FILTERS = [
-  { id: 'oscuro',      label: '🌑 Oscuro',       query: 'dark literature' },
-  { id: 'emotivo',     label: '💧 Emotivo',       query: 'emotional fiction' },
+  { id: 'oscuro',      label: '🌑 Oscuro',       query: 'dark literature fiction' },
+  { id: 'emotivo',     label: '💧 Emotivo',       query: 'emotional drama fiction' },
   { id: 'relajante',   label: '🌿 Relajante',     query: 'cozy slice of life' },
   { id: 'épico',       label: '⚔️ Épico',         query: 'epic fantasy adventure' },
-  { id: 'misterioso',  label: '🔍 Misterioso',    query: 'mystery thriller' },
-  { id: 'filosófico',  label: '🧠 Filosófico',    query: 'philosophy essays' },
+  { id: 'misterioso',  label: '🔍 Misterioso',    query: 'mystery thriller suspense' },
+  { id: 'filosófico',  label: '🧠 Filosófico',    query: 'philosophy essays ideas' },
   { id: 'romántico',   label: '💕 Romántico',     query: 'romance love story' },
   { id: 'humorístico', label: '😄 Humor',         query: 'humor comedy fiction' },
 ];
 
 export default function Home({ user, token, onAuthClick, navigate }) {
   const { isMobile, lt } = useBreakpoint();
-  const [query,     setQuery]    = useState('');
-  const [results,   setResults]  = useState([]);
-  const [loading,   setLoading]  = useState(false);
-  const [searched,  setSearched] = useState(false);
-  const [featured,  setFeatured] = useState([]);
-  const [featLoad,  setFeatLoad] = useState(true);
-  // ✅ Fix: activeMood is togglable — clicking again deselects
+  const [query,      setQuery]    = useState('');
+  const [results,    setResults]  = useState([]);
+  const [loading,    setLoading]  = useState(false);
+  const [searched,   setSearched] = useState(false);
+  const [featured,   setFeatured] = useState([]);
+  const [featLoad,   setFeatLoad] = useState(true);
   const [activeMood, setActiveMood] = useState(null);
-  const [selected,  setSelected] = useState(null);
-  const [progBook,  setProgBook] = useState(null);
-  const [toast,     setToast]    = useState('');
+  const [selected,   setSelected] = useState(null);
+  const [progBook,   setProgBook] = useState(null);
+  const [toast,      setToast]    = useState('');
   const resultsRef = useRef(null);
 
   useEffect(() => {
+    // Google Books trending: books with covers come back already adapted
     api.getTrending().then(d => {
-      const works = (d.works || []).filter(w => w.cover_id).slice(0, 10).map(w => ({
-        key: w.key, title: w.title,
-        author_name: w.authors?.map(a => a.name),
-        cover_i: w.cover_id,
-        first_publish_year: w.first_publish_year,
-      }));
-      setFeatured(works);
+      setFeatured((d.works || []).slice(0, 10));
     }).catch(() => {}).finally(() => setFeatLoad(false));
   }, []);
 
@@ -56,15 +50,9 @@ export default function Home({ user, token, onAuthClick, navigate }) {
 
   const handleMoodClick = async (mood) => {
     if (activeMood === mood.id) {
-      // Deselect
-      setActiveMood(null);
-      setSearched(false);
-      setResults([]);
-      return;
+      setActiveMood(null); setSearched(false); setResults([]); return;
     }
-    setActiveMood(mood.id);
-    setSearched(true);
-    setLoading(true); setResults([]);
+    setActiveMood(mood.id); setSearched(true); setLoading(true); setResults([]);
     try {
       const data = await api.searchBooks(mood.query);
       setResults(data.docs || []);
@@ -73,10 +61,7 @@ export default function Home({ user, token, onAuthClick, navigate }) {
     finally { setLoading(false); }
   };
 
-  const clearResults = () => {
-    setSearched(false); setActiveMood(null); setResults([]); setQuery('');
-  };
-
+  const clearResults = () => { setSearched(false); setActiveMood(null); setResults([]); setQuery(''); };
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
   const pad = isMobile ? '16px' : lt(1024) ? '24px' : '40px';
 
@@ -128,20 +113,15 @@ export default function Home({ user, token, onAuthClick, navigate }) {
         <SectionHeader title="Explorar por mood" />
         <div className="tabs-scroll">
           {MOOD_FILTERS.map(m => (
-            <button
-              key={m.id}
-              onClick={() => handleMoodClick(m)}
-              style={{
-                padding: '8px 16px', borderRadius: '100px', fontSize: '13px', fontWeight: '500', whiteSpace: 'nowrap',
-                background: activeMood === m.id ? 'var(--accent)' : 'var(--surface)',
-                color: activeMood === m.id ? '#fff' : 'var(--text-dim)',
-                border: `1px solid ${activeMood === m.id ? 'var(--accent)' : 'var(--border-2)'}`,
-                cursor: 'pointer', fontFamily: "'Figtree',sans-serif", transition: 'all 0.15s',
-                boxShadow: activeMood === m.id ? '0 0 16px var(--accent-glow)' : 'none',
-              }}
-            >
+            <button key={m.id} onClick={() => handleMoodClick(m)} style={{
+              padding: '8px 16px', borderRadius: '100px', fontSize: '13px', fontWeight: '500', whiteSpace: 'nowrap',
+              background: activeMood === m.id ? 'var(--accent)' : 'var(--surface)',
+              color: activeMood === m.id ? '#fff' : 'var(--text-dim)',
+              border: `1px solid ${activeMood === m.id ? 'var(--accent)' : 'var(--border-2)'}`,
+              cursor: 'pointer', fontFamily: "'Figtree',sans-serif", transition: 'all 0.15s',
+              boxShadow: activeMood === m.id ? '0 0 16px var(--accent-glow)' : 'none',
+            }}>
               {m.label}
-              {/* ✅ Show X when active to make it clear it's deselectable */}
               {activeMood === m.id && <span style={{ marginLeft: '6px', opacity: 0.8 }}>×</span>}
             </button>
           ))}

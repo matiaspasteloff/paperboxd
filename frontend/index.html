@@ -1,10 +1,61 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PaperBoxd</title>
+
+    <!-- Primary SEO -->
+    <title>PaperBoxd – Tu diario de lectura personal</title>
+    <meta name="description" content="PaperBoxd: registrá, calificá y reseñá tus lecturas. Descubrí nuevos libros, seguí tu progreso y conectá con otros lectores apasionados." />
+    <meta name="keywords" content="libros, reseñas, lectura, booktracker, literatura, leer, diario lector, book tracker, bookshelf" />
+    <meta name="author" content="PaperBoxd" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://paperboxd.com/" />
+
+    <!-- Open Graph (Facebook / LinkedIn / WhatsApp) -->
+    <meta property="og:type"        content="website" />
+    <meta property="og:url"         content="https://paperboxd.com/" />
+    <meta property="og:site_name"   content="PaperBoxd" />
+    <meta property="og:title"       content="PaperBoxd – Tu diario de lectura personal" />
+    <meta property="og:description" content="Registrá, calificá y reseñá tus lecturas. Descubrí libros nuevos y conectá con otros lectores." />
+    <meta property="og:image"       content="https://paperboxd.com/og-image.png" />
+    <meta property="og:image:width"  content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale"      content="es_AR" />
+
+    <!-- Twitter / X Card -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:site"        content="@paperboxd" />
+    <meta name="twitter:title"       content="PaperBoxd – Tu diario de lectura personal" />
+    <meta name="twitter:description" content="Registrá, calificá y reseñá tus lecturas. Descubrí libros nuevos y conectá con otros lectores." />
+    <meta name="twitter:image"       content="https://paperboxd.com/og-image.png" />
+
+    <!-- PWA / Mobile -->
+    <meta name="theme-color" content="#030b16" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PaperBoxd" />
+
+    <!-- Structured Data: WebSite -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "PaperBoxd",
+      "description": "Tu diario de lectura personal — registrá, calificá y reseñá libros",
+      "url": "https://paperboxd.com",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://paperboxd.com/?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
