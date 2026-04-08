@@ -21,7 +21,7 @@ const gbFetch = async (params, maxResults = 16) => {
   const qs = new URLSearchParams({
     printType: 'books',
     maxResults: String(maxResults),
-    key: API_KEY, // 👈 ¡ACÁ ESTÁ LA CLAVE AGREGADA!
+    key: API_KEY, 
     ...params,
   });
   try {
@@ -128,7 +128,6 @@ export const api = {
    */
   getBookDetails: async (volumeId) => {
     try {
-      // 👈 ¡ACÁ TAMBIÉN AGREGUÉ LA CLAVE AL FETCH DIRECTO!
       const r = await fetch(`${GB}/volumes/${volumeId}?key=${API_KEY}`);
       if (!r.ok) return null;
       return adaptGoogleBook(await r.json());
