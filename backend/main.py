@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from jose import JWTError, jwt
 from typing import Optional
-import httpx, asyncio, time
+import httpx, asyncio, time, os
 
 from database import engine, Base, get_db
 import models, schemas, auth
@@ -17,6 +17,9 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 oauth2_optional = OAuth2PasswordBearer(tokenUrl="login", auto_error=False)
+
+# 👈 Aca cargamos tu clave desde las variables de entorno de Render
+GOOGLE_BOOKS_API_KEY = os.getenv("GOOGLE_BOOKS_API_KEY")
 
 # ── SIMPLE IN-MEMORY CACHE ────────────────────────────────────────────────────
 # Structure: { key: (timestamp_float, data) }
@@ -69,11 +72,22 @@ def get_optional_user(token: str = Depends(oauth2_optional), db: Session = Depen
 
 async def gb_search(query: str, max_results: int = 8) -> list[dict]:
     """Search Google Books API and return adapted book dicts."""
+    
+    # 👈 Preparamos los parámetros de búsqueda incluyendo la API KEY
+    params = {
+        "q": query, 
+        "maxResults": max_results, 
+        "printType": "books", 
+        "orderBy": "relevance"
+    }
+    if GOOGLE_BOOKS_API_KEY:
+        params["key"] = GOOGLE_BOOKS_API_KEY
+
     async with httpx.AsyncClient(timeout=6) as c:
         try:
             r = await c.get(
                 "https://www.googleapis.com/books/v1/volumes",
-                params={"q": query, "maxResults": max_results, "printType": "books", "orderBy": "relevance"},
+                params=params, # 👈 Acá se la pasamos
             )
             if r.status_code != 200:
                 return []

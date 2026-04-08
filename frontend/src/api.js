@@ -1,5 +1,6 @@
 import { adaptGoogleBook, SUBJECT_QUERY_MAP } from './utils/googleBooks';
 
+const API_KEY = import.meta.env.VITE_GOOGLE_BOOKS_API_KEY;
 const BASE = 'https://paperboxd-backend.onrender.com';
 const GB = 'https://www.googleapis.com/books/v1';
 
@@ -20,6 +21,7 @@ const gbFetch = async (params, maxResults = 16) => {
   const qs = new URLSearchParams({
     printType: 'books',
     maxResults: String(maxResults),
+    key: API_KEY, // 👈 ¡ACÁ ESTÁ LA CLAVE AGREGADA!
     ...params,
   });
   try {
@@ -126,7 +128,8 @@ export const api = {
    */
   getBookDetails: async (volumeId) => {
     try {
-      const r = await fetch(`${GB}/volumes/${volumeId}`);
+      // 👈 ¡ACÁ TAMBIÉN AGREGUÉ LA CLAVE AL FETCH DIRECTO!
+      const r = await fetch(`${GB}/volumes/${volumeId}?key=${API_KEY}`);
       if (!r.ok) return null;
       return adaptGoogleBook(await r.json());
     } catch {
