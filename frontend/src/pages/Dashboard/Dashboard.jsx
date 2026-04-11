@@ -4,6 +4,7 @@ import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { useToast } from '../../hooks/useToast';
 import Avatar from '../../components/Navbar/Avatar';
 import QuoteCard from '../../components/QuoteCard';
+import GoodreadsImporter from '../../components/GoodreadsImporter';
 import Toast from '../../components/ui/Toast';
 import FeedTab from './FeedTab';
 import LibraryTab from './LibraryTab';
@@ -51,6 +52,7 @@ export default function Dashboard({ user, token, navigate, updateUser, onAuthCli
   const [recommendations, setRecommendations] = useState([]);
   const [loading,         setLoading]         = useState(true);
   const [showQuote,       setShowQuote]       = useState(false);
+  const [showImporter,    setShowImporter]    = useState(false);
   const [goal,            setGoal]            = useState(user?.reading_goal || 0);
   const [editGoal,        setEditGoal]        = useState(false);
   const pad = isMobile ? '16px' : lt(1024) ? '24px' : '36px';
@@ -80,6 +82,13 @@ export default function Dashboard({ user, token, navigate, updateUser, onAuthCli
     setEditGoal(false);
   };
 
+  const handleImportSuccess = () => {
+    setShowImporter(false);
+    setTab('library');
+    showToast('Biblioteca importada desde GoodReads ✓');
+    load();
+  };
+
   const totalFinished = stats?.total_finished || 0;
   const challengePct  = goal > 0 ? Math.min(100, Math.round((totalFinished / goal) * 100)) : 0;
 
@@ -101,21 +110,35 @@ export default function Dashboard({ user, token, navigate, updateUser, onAuthCli
               <button onClick={() => navigate('profile', user?.username)} style={{ background: 'transparent', border: 'none', color: 'var(--accent)', fontSize: '12px', cursor: 'pointer', fontFamily: "'Figtree',sans-serif", padding: 0, marginTop: '2px' }}>Ver mi perfil público →</button>
             </div>
           </div>
-          {stats && (
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              {[
-                { v: stats.total_reviews,   l: 'Reseñas' },
-                { v: stats.total_finished,  l: 'Terminados' },
-                { v: stats.followers_count, l: 'Seguidores' },
-                { v: stats.avg_rating ? `${stats.avg_rating}★` : '—', l: 'Promedio' },
-              ].map(({ v, l }) => (
-                <div key={l} style={{ textAlign: 'center', background: 'var(--accent-sub)', border: '1px solid var(--border-2)', borderRadius: '10px', padding: isMobile ? '8px 10px' : '10px 16px' }}>
-                  <div style={{ fontFamily: "'Syne',sans-serif", fontSize: isMobile ? '16px' : '20px', fontWeight: 800 }}>{v}</div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{l}</div>
-                </div>
-              ))}
-            </div>
-          )}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            {/* GoodReads import button */}
+            <button
+              onClick={() => setShowImporter(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: isMobile ? '8px 12px' : '9px 16px', background: 'linear-gradient(135deg, rgba(224,123,57,0.12), rgba(247,201,72,0.12))', border: '1px solid rgba(224,123,57,0.3)', borderRadius: '10px', color: '#e07b39', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Figtree',sans-serif", transition: 'all 0.18s' }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(224,123,57,0.6)'}
+              onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(224,123,57,0.3)'}
+            >
+              📗 {isMobile ? 'GoodReads' : 'Importar GoodReads'}
+            </button>
+
+            {/* Stats tiles */}
+            {stats && (
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                {[
+                  { v: stats.total_reviews,   l: 'Reseñas' },
+                  { v: stats.total_finished,  l: 'Terminados' },
+                  { v: stats.followers_count, l: 'Seguidores' },
+                  { v: stats.avg_rating ? `${stats.avg_rating}★` : '—', l: 'Promedio' },
+                ].map(({ v, l }) => (
+                  <div key={l} style={{ textAlign: 'center', background: 'var(--accent-sub)', border: '1px solid var(--border-2)', borderRadius: '10px', padding: isMobile ? '8px 10px' : '10px 16px' }}>
+                    <div style={{ fontFamily: "'Syne',sans-serif", fontSize: isMobile ? '16px' : '20px', fontWeight: 800 }}>{v}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{l}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -130,7 +153,7 @@ export default function Dashboard({ user, token, navigate, updateUser, onAuthCli
         <div style={{ height: '1px', background: 'var(--border)', margin: '0 0 28px' }} />
       </div>
 
-      {/* Content */}
+      {/* Tab content */}
       <div style={{ maxWidth: '1240px', margin: '0 auto', padding: `0 ${pad} 80px` }}>
         {loading ? <LoadingGrid /> : (
           <>
@@ -146,7 +169,8 @@ export default function Dashboard({ user, token, navigate, updateUser, onAuthCli
         )}
       </div>
 
-      {showQuote && <QuoteCard token={token} onClose={() => setShowQuote(false)} />}
+      {showQuote    && <QuoteCard token={token} onClose={() => setShowQuote(false)} />}
+      {showImporter && <GoodreadsImporter token={token} onClose={() => setShowImporter(false)} onSuccess={handleImportSuccess} />}
     </div>
   );
 }

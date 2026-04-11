@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from routers import imports
 from database import engine, Base
 from routers import auth, social, reviews, progress, content, stats
 
@@ -25,6 +25,7 @@ app.include_router(reviews.router)
 app.include_router(progress.router)
 app.include_router(content.router)
 app.include_router(stats.router)
+app.include_router(imports.router)
 
 
 # ── HEALTH ────────────────────────────────────────────────────────────────────
