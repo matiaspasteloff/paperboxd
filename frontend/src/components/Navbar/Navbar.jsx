@@ -36,9 +36,9 @@ export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) 
         zIndex: 100, height: '56px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 24px',
-        background: scrolled || mobileOpen ? 'rgba(14,13,11,0.96)' : 'transparent',
+        background: scrolled || mobileOpen ? 'var(--surface)' : 'transparent',
         backdropFilter: scrolled ? 'blur(20px)' : 'none',
-        borderBottom: scrolled ? '1px solid var(--border)' : '1px solid transparent',
+        borderBottom: scrolled ? '1px solid var(--border-2)' : '1px solid transparent',
         transition: 'all 0.3s',
         gap: '16px',
       }}>
@@ -50,22 +50,14 @@ export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) 
         >
           <span style={{
             fontFamily: "'Playfair Display', Georgia, serif",
-            fontWeight: 700,
-            fontSize: '18px',
-            color: 'var(--text)',
+            fontWeight: 700, fontSize: '18px', color: 'var(--text)',
             letterSpacing: '-0.3px',
-          }}>
-            Paper
-          </span>
+          }}>Paper</span>
           <span style={{
             fontFamily: "'Playfair Display', Georgia, serif",
-            fontWeight: 700,
-            fontStyle: 'italic',
-            fontSize: '18px',
+            fontWeight: 700, fontStyle: 'italic', fontSize: '18px',
             color: 'var(--accent)',
-          }}>
-            Boxd
-          </span>
+          }}>Boxd</span>
         </div>
 
         {/* Desktop center links */}
@@ -86,7 +78,7 @@ export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) 
             onClick={() => { setThemeOpen(o => !o); setMobileOpen(false); }}
             style={{
               background: 'transparent',
-              border: '1px solid var(--border)',
+              border: '1px solid var(--border-2)',
               borderRadius: '4px',
               padding: '5px 9px',
               color: 'var(--text-muted)',
@@ -96,11 +88,11 @@ export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) 
               letterSpacing: '0.5px',
               transition: 'all 0.15s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-2)'; e.currentTarget.style.color = 'var(--text-dim)'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-3)'; e.currentTarget.style.color = 'var(--accent)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-2)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
             title="Cambiar tema"
           >
-            ●
+            Tema
           </button>
 
           {!compact && user && (
@@ -156,7 +148,7 @@ export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) 
               onClick={() => setMobileOpen(o => !o)}
               style={{
                 background: 'transparent',
-                border: '1px solid var(--border)',
+                border: '1px solid var(--border-2)',
                 borderRadius: '4px',
                 padding: '7px 10px',
                 color: 'var(--text-dim)',
@@ -165,8 +157,8 @@ export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) 
                 lineHeight: 1,
                 transition: 'all 0.15s',
               }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border-2)'}
-              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+              onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border-3)'}
+              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-2)'}
             >
               {mobileOpen ? '✕' : '☰'}
             </button>
