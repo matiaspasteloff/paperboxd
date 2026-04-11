@@ -10,15 +10,16 @@ class User(Base):
     username        = Column(String(50), unique=True, index=True)
     email           = Column(String(100), unique=True, index=True)
     hashed_password = Column(String(255))
+    is_verified     = Column(Boolean, default=False)   # ← NEW
     # Profile
     bio             = Column(Text, default="")
-    avatar_color    = Column(String(20), default="#388bfd")
+    avatar_color    = Column(String(20), default="#c8943a")
     favorite_genres = Column(String(300), default="")
     favorite_moods  = Column(String(300), default="")
     location        = Column(String(100), default="")
     website         = Column(String(200), default="")
     # Settings
-    theme           = Column(String(20), default="dark-blue")
+    theme           = Column(String(20), default="parchment")
     reading_goal    = Column(Integer, default=0)
     is_private      = Column(Boolean, default=False)
     joined_at       = Column(DateTime(timezone=True), server_default=func.now())
@@ -42,7 +43,6 @@ class Follower(Base):
 
     __table_args__ = (
         UniqueConstraint("follower_id", "following_id", name="unique_follow"),
-        # Speed up "get all people I follow" and "get all my followers"
         Index("ix_follower_follower_id",  "follower_id"),
         Index("ix_follower_following_id", "following_id"),
     )
@@ -64,11 +64,9 @@ class Review(Base):
     genre                = Column(String(50), default="")
 
     __table_args__ = (
-        # Fast lookup: "all reviews for this book" and "did this user review this book"
         Index("ix_review_work_id",        "open_library_work_id"),
         Index("ix_review_user_id",        "user_id"),
         Index("ix_review_user_work",      "user_id", "open_library_work_id"),
-        # Feed: latest reviews from followed users (range query by user_id + order by id)
         Index("ix_review_user_id_desc",   "user_id", "id"),
     )
 
@@ -91,7 +89,6 @@ class ReadingProgress(Base):
     __table_args__ = (
         Index("ix_progress_user_id",   "user_id"),
         Index("ix_progress_user_work", "user_id", "open_library_work_id"),
-        # Quickly filter by status (e.g. "finished" for reading challenge)
         Index("ix_progress_user_status", "user_id", "status"),
     )
 
@@ -184,7 +181,6 @@ class ClubMessage(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (
-        # Fast chapter-filtered message loading
         Index("ix_clubmsg_club_chapter", "club_id", "chapter"),
     )
 

@@ -15,3 +15,18 @@ export const getMe = (token) =>
 
 export const updateMe = (token, body) =>
   call(`${BASE}/me`, { method: 'PATCH', headers: h(token), body: JSON.stringify(body) });
+
+// ── Email verification ────────────────────────────────────────────────────────
+export const sendVerificationCode = (email) =>
+  call(`${BASE}/auth/send-verification`, {
+    method: 'POST',
+    headers: h(),
+    body: JSON.stringify({ email }),
+  });
+
+export const verifyEmail = (email, code) =>
+  call(`${BASE}/auth/verify-email`, {
+    method: 'POST',
+    headers: h(),
+    body: JSON.stringify({ email, code }),
+  });

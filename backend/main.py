@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import imports
 from database import engine, Base
 from routers import auth, social, reviews, progress, content, stats
+from verification import router as verification_router
 
 # Create all tables
 Base.metadata.create_all(bind=engine)
@@ -26,6 +27,7 @@ app.include_router(progress.router)
 app.include_router(content.router)
 app.include_router(stats.router)
 app.include_router(imports.router)
+app.include_router(verification_router)   
 
 
 # ── HEALTH ────────────────────────────────────────────────────────────────────
@@ -36,5 +38,4 @@ def root():
 
 @app.get("/health")
 def health():
-    """Lightweight ping to keep Render's free tier awake."""
     return {"status": "ok"}
