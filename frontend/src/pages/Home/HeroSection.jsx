@@ -1,41 +1,182 @@
 export default function HeroSection({ query, setQuery, onSearch, user, hasResults, onAuthClick, isMobile }) {
   return (
-    <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: `80px ${isMobile ? '20px' : '24px'} 40px`, position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse 70% 50% at 50% 20%, var(--accent-sub) 0%, transparent 70%)' }} />
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'linear-gradient(var(--border) 1px, transparent 1px),linear-gradient(90deg, var(--border) 1px, transparent 1px)', backgroundSize: '48px 48px', maskImage: 'radial-gradient(ellipse at center, black 20%, transparent 75%)' }} />
+    <section style={{
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      textAlign: 'center',
+      padding: `80px ${isMobile ? '20px' : '40px'} 60px`,
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
+      {/* Subtle grid texture */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        backgroundImage: 'linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)',
+        backgroundSize: '60px 60px',
+        maskImage: 'radial-gradient(ellipse 80% 60% at 50% 50%, black 30%, transparent 80%)',
+        opacity: 0.6,
+      }} />
 
-      <div className="fadeUp badge" style={{ animationDelay: '0.05s', marginBottom: '24px' }}>✦ Tu diario de lectura personal</div>
+      {/* Warm glow */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: 'radial-gradient(ellipse 60% 40% at 50% 30%, rgba(200,148,58,0.06) 0%, transparent 70%)',
+      }} />
 
-      <h1 className="fadeUp" style={{ animationDelay: '0.15s', fontFamily: "'Syne',sans-serif", fontSize: isMobile ? '42px' : 'clamp(46px,9vw,96px)', fontWeight: 800, letterSpacing: isMobile ? '-1.5px' : '-2px', lineHeight: 0.95, marginBottom: '18px' }}>
-        PAPER<br />
-        <span style={{ background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-3) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>BOXD</span>
+      {/* Eyebrow label */}
+      <div className="fadeUp" style={{
+        animationDelay: '0.05s',
+        marginBottom: '32px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        color: 'var(--accent)',
+        fontSize: '11px',
+        fontWeight: '700',
+        letterSpacing: '2px',
+        textTransform: 'uppercase',
+        fontFamily: "'Lato', sans-serif",
+      }}>
+        <span style={{ width: '24px', height: '1px', background: 'var(--accent)', display: 'inline-block' }} />
+        Tu diario de lectura
+        <span style={{ width: '24px', height: '1px', background: 'var(--accent)', display: 'inline-block' }} />
+      </div>
+
+      {/* Main headline — editorial serif */}
+      <h1 className="fadeUp" style={{
+        animationDelay: '0.12s',
+        fontFamily: "'Playfair Display', Georgia, serif",
+        fontSize: isMobile ? '52px' : 'clamp(60px, 10vw, 110px)',
+        fontWeight: 700,
+        letterSpacing: isMobile ? '-1px' : '-2px',
+        lineHeight: 0.92,
+        marginBottom: '28px',
+        color: 'var(--text)',
+      }}>
+        Paper
+        <em style={{
+          fontStyle: 'italic',
+          color: 'var(--accent)',
+          display: 'block',
+        }}>Boxd</em>
       </h1>
 
-      <p className="fadeUp" style={{ animationDelay: '0.25s', fontSize: isMobile ? '15px' : '17px', color: 'var(--text-muted)', maxWidth: '420px', lineHeight: 1.7, marginBottom: '36px' }}>
-        Registrá, calificá, reseñá y descubrí qué opinan otros lectores.
+      {/* Tagline */}
+      <p className="fadeUp" style={{
+        animationDelay: '0.22s',
+        fontSize: isMobile ? '14px' : '16px',
+        color: 'var(--text-dim)',
+        maxWidth: '380px',
+        lineHeight: 1.8,
+        marginBottom: '44px',
+        fontFamily: "'Lato', sans-serif",
+        fontWeight: 300,
+        fontStyle: 'italic',
+      }}>
+        Registrá, calificá y reseñá tus lecturas.<br />
+        Descubrí qué leen otros.
       </p>
 
-      <div className="fadeUp" style={{ animationDelay: '0.35s', width: '100%', maxWidth: '540px' }}>
-        <div style={{ display: 'flex', background: 'var(--surface)', border: '1px solid var(--border-2)', borderRadius: '14px', overflow: 'hidden', boxShadow: '0 8px 40px rgba(0,0,0,0.4)' }}>
-          {!isMobile && <span style={{ padding: '0 0 0 16px', display: 'flex', alignItems: 'center', color: 'var(--text-muted)', fontSize: '16px' }}>🔍</span>}
+      {/* Search */}
+      <div className="fadeUp" style={{ animationDelay: '0.32s', width: '100%', maxWidth: '500px' }}>
+        <div style={{
+          display: 'flex',
+          background: 'var(--surface)',
+          border: '1px solid var(--border-2)',
+          borderRadius: '6px',
+          overflow: 'hidden',
+          boxShadow: '0 8px 40px rgba(0,0,0,0.4), 0 0 0 0 var(--accent-glow)',
+          transition: 'box-shadow 0.2s',
+        }}
+          onFocus={e => e.currentTarget.style.boxShadow = '0 8px 40px rgba(0,0,0,0.4), 0 0 0 2px var(--accent-sub)'}
+          onBlur={e => e.currentTarget.style.boxShadow = '0 8px 40px rgba(0,0,0,0.4)'}
+        >
           <input
-            style={{ flex: 1, background: 'transparent', border: 'none', color: 'var(--text)', fontSize: isMobile ? '16px' : '15px', padding: isMobile ? '14px' : '16px 14px', outline: 'none', fontFamily: "'Figtree',sans-serif" }}
-            placeholder={isMobile ? 'Buscá un libro...' : 'Buscá un título, autor o ISBN...'}
+            style={{
+              flex: 1,
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text)',
+              fontSize: isMobile ? '16px' : '15px',
+              padding: isMobile ? '16px 14px' : '16px 18px',
+              outline: 'none',
+              fontFamily: "'Lato', sans-serif",
+              fontStyle: 'italic',
+            }}
+            placeholder={isMobile ? 'Buscá un libro...' : 'Título, autor o ISBN...'}
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && onSearch()}
           />
-          <button onClick={onSearch} style={{ background: 'var(--accent)', border: 'none', color: '#fff', fontWeight: '700', fontSize: '14px', padding: '0 20px', cursor: 'pointer', fontFamily: "'Figtree',sans-serif" }}>
-            {isMobile ? '🔍' : 'Buscar'}
+          <button
+            onClick={onSearch}
+            style={{
+              background: 'var(--accent)',
+              border: 'none',
+              color: '#fff',
+              fontWeight: '700',
+              fontSize: '12px',
+              padding: '0 22px',
+              cursor: 'pointer',
+              fontFamily: "'Lato', sans-serif",
+              letterSpacing: '1px',
+              textTransform: 'uppercase',
+              transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => (e.target.style.background = 'var(--accent-2)')}
+            onMouseLeave={e => (e.target.style.background = 'var(--accent)')}
+          >
+            {isMobile ? '→' : 'Buscar'}
           </button>
         </div>
 
-        {!user && hasResults && (
-          <p style={{ marginTop: '10px', color: 'var(--text-muted)', fontSize: '13px' }}>
-            <span onClick={onAuthClick} style={{ color: 'var(--accent)', cursor: 'pointer', fontWeight: '600' }}>Ingresá</span> para reseñar libros
+        {!user && (
+          <p style={{
+            marginTop: '14px',
+            color: 'var(--text-muted)',
+            fontSize: '12px',
+            fontFamily: "'Lato', sans-serif",
+          }}>
+            <span
+              onClick={onAuthClick}
+              style={{ color: 'var(--accent)', cursor: 'pointer', borderBottom: '1px solid var(--accent-sub)' }}
+            >
+              Ingresá
+            </span>{' '}para reseñar y guardar libros
           </p>
         )}
       </div>
+
+      {/* Subtle scroll indicator */}
+      {!hasResults && (
+        <div className="fadeUp" style={{
+          animationDelay: '0.6s',
+          position: 'absolute',
+          bottom: '32px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '6px',
+          color: 'var(--text-muted)',
+          fontSize: '10px',
+          letterSpacing: '1.5px',
+          textTransform: 'uppercase',
+          fontFamily: "'Lato', sans-serif",
+        }}>
+          <div style={{
+            width: '1px',
+            height: '32px',
+            background: 'linear-gradient(to bottom, transparent, var(--text-muted))',
+            animation: 'pulse 2s ease infinite',
+          }} />
+          scroll
+        </div>
+      )}
     </section>
   );
 }

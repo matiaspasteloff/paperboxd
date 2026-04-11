@@ -15,9 +15,9 @@ const NAV_LINKS = [
 ];
 
 export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) {
-  const [scrolled,    setScrolled]   = useState(false);
-  const [themeOpen,   setThemeOpen]  = useState(false);
-  const [mobileOpen,  setMobileOpen] = useState(false);
+  const [scrolled,   setScrolled]  = useState(false);
+  const [themeOpen,  setThemeOpen] = useState(false);
+  const [mobileOpen, setMobileOpen]= useState(false);
   const { isMobile, isTablet } = useBreakpoint();
   const compact = isMobile || isTablet;
 
@@ -31,13 +31,40 @@ export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) 
 
   return (
     <>
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, height: '58px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', background: scrolled || mobileOpen ? 'var(--surface)' : 'transparent', backdropFilter: scrolled ? 'blur(16px)' : 'none', borderBottom: scrolled ? '1px solid var(--border)' : '1px solid transparent', transition: 'all 0.3s', gap: '12px' }}>
+      <nav style={{
+        position: 'fixed', top: 0, left: 0, right: 0,
+        zIndex: 100, height: '56px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 24px',
+        background: scrolled || mobileOpen ? 'rgba(14,13,11,0.96)' : 'transparent',
+        backdropFilter: scrolled ? 'blur(20px)' : 'none',
+        borderBottom: scrolled ? '1px solid var(--border)' : '1px solid transparent',
+        transition: 'all 0.3s',
+        gap: '16px',
+      }}>
 
         {/* Logo */}
-        <div onClick={() => go('home')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-          <div style={{ width: '28px', height: '28px', borderRadius: '7px', background: 'linear-gradient(135deg, var(--accent), var(--accent-2))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', boxShadow: '0 0 12px var(--accent-glow)' }}>📖</div>
-          <span style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: '17px', color: 'var(--text)', letterSpacing: '-0.3px' }}>
-            Paper<span style={{ color: 'var(--accent)' }}>Boxd</span>
+        <div
+          onClick={() => go('home')}
+          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}
+        >
+          <span style={{
+            fontFamily: "'Playfair Display', Georgia, serif",
+            fontWeight: 700,
+            fontSize: '18px',
+            color: 'var(--text)',
+            letterSpacing: '-0.3px',
+          }}>
+            Paper
+          </span>
+          <span style={{
+            fontFamily: "'Playfair Display', Georgia, serif",
+            fontWeight: 700,
+            fontStyle: 'italic',
+            fontSize: '18px',
+            color: 'var(--accent)',
+          }}>
+            Boxd
           </span>
         </div>
 
@@ -55,30 +82,92 @@ export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) 
 
         {/* Right side */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-          <button onClick={() => { setThemeOpen(o => !o); setMobileOpen(false); }} style={{ background: 'var(--accent-sub)', border: '1px solid var(--border-2)', borderRadius: '8px', padding: '6px 10px', color: 'var(--text-dim)', fontSize: '13px', cursor: 'pointer' }}>🎨</button>
+          <button
+            onClick={() => { setThemeOpen(o => !o); setMobileOpen(false); }}
+            style={{
+              background: 'transparent',
+              border: '1px solid var(--border)',
+              borderRadius: '4px',
+              padding: '5px 9px',
+              color: 'var(--text-muted)',
+              fontSize: '12px',
+              cursor: 'pointer',
+              fontFamily: "'Lato', sans-serif",
+              letterSpacing: '0.5px',
+              transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-2)'; e.currentTarget.style.color = 'var(--text-dim)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
+            title="Cambiar tema"
+          >
+            ●
+          </button>
 
           {!compact && user && (
             <>
-              <NavBtn active={page.name === 'dashboard'} onClick={() => go('dashboard')}>📚 Biblioteca</NavBtn>
+              <NavBtn active={page.name === 'dashboard'} onClick={() => go('dashboard')}>
+                Biblioteca
+              </NavBtn>
               <button
                 onClick={() => go('profile', user.username)}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--accent-sub)', border: '1px solid var(--border-2)', borderRadius: '10px', padding: '5px 12px', cursor: 'pointer', transition: 'all 0.15s' }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border-2)',
+                  borderRadius: '4px',
+                  padding: '5px 11px 5px 7px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
                 onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--border-3)')}
                 onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border-2)')}
               >
                 <Avatar name={user.username} color={user.avatar_color} size={22} />
-                <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-dim)' }}>@{user.username}</span>
+                <span style={{
+                  fontSize: '13px', fontWeight: '700',
+                  color: 'var(--text-dim)',
+                  fontFamily: "'Lato', sans-serif",
+                }}>
+                  {user.username}
+                </span>
               </button>
-              <button className="btn-ghost" style={{ fontSize: '13px', padding: '7px 12px' }} onClick={onLogout}>Salir</button>
+              <button
+                className="btn-ghost"
+                style={{ fontSize: '12px', padding: '6px 12px', letterSpacing: '0.4px' }}
+                onClick={onLogout}
+              >
+                Salir
+              </button>
             </>
           )}
 
           {!compact && !user && (
-            <button className="btn-primary" style={{ padding: '8px 18px', fontSize: '14px' }} onClick={onAuthClick}>Ingresar</button>
+            <button
+              className="btn-primary"
+              style={{ padding: '8px 18px', fontSize: '12px' }}
+              onClick={onAuthClick}
+            >
+              Ingresar
+            </button>
           )}
 
           {compact && (
-            <button onClick={() => setMobileOpen(o => !o)} style={{ background: 'var(--accent-sub)', border: '1px solid var(--border-2)', borderRadius: '8px', padding: '7px 11px', color: 'var(--text)', cursor: 'pointer', fontSize: '16px', lineHeight: 1 }}>
+            <button
+              onClick={() => setMobileOpen(o => !o)}
+              style={{
+                background: 'transparent',
+                border: '1px solid var(--border)',
+                borderRadius: '4px',
+                padding: '7px 10px',
+                color: 'var(--text-dim)',
+                cursor: 'pointer',
+                fontSize: '14px',
+                lineHeight: 1,
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border-2)'}
+              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+            >
               {mobileOpen ? '✕' : '☰'}
             </button>
           )}
@@ -88,13 +177,17 @@ export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) 
       {themeOpen && <ThemeDropdown onClose={() => setThemeOpen(false)} />}
 
       {compact && mobileOpen && (
-        <MobileMenu page={page} user={user} navigate={navigate} onAuthClick={onAuthClick} onLogout={onLogout} onClose={() => setMobileOpen(false)} />
+        <MobileMenu
+          page={page} user={user} navigate={navigate}
+          onAuthClick={onAuthClick} onLogout={onLogout}
+          onClose={() => setMobileOpen(false)}
+        />
       )}
 
       <MobileBottomNav page={page} user={user} navigate={navigate} onAuthClick={onAuthClick} />
 
-      {mobileOpen  && <div onClick={() => setMobileOpen(false)}  style={{ position: 'fixed', inset: 0, zIndex: 98 }} />}
-      {themeOpen   && <div onClick={() => setThemeOpen(false)}   style={{ position: 'fixed', inset: 0, zIndex: 299 }} />}
+      {mobileOpen && <div onClick={() => setMobileOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 98 }} />}
+      {themeOpen  && <div onClick={() => setThemeOpen(false)}  style={{ position: 'fixed', inset: 0, zIndex: 299 }} />}
     </>
   );
 }

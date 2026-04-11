@@ -8,16 +8,18 @@ export default function NavBtn({ active, onClick, children }) {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        background: active || hov ? 'var(--accent-sub)' : 'transparent',
-        color: active ? 'var(--accent-2)' : hov ? 'var(--text)' : 'var(--text-dim)',
-        border: active ? '1px solid var(--border-2)' : '1px solid transparent',
-        fontSize: '14px',
-        fontWeight: active ? '600' : '400',
-        padding: '6px 13px',
-        borderRadius: '8px',
+        background: 'transparent',
+        color: active ? 'var(--text)' : hov ? 'var(--text-dim)' : 'var(--text-muted)',
+        border: 'none',
+        borderBottom: active ? '1px solid var(--accent)' : '1px solid transparent',
+        fontSize: '13px',
+        fontWeight: active ? '700' : '400',
+        padding: '6px 12px',
+        borderRadius: '0',
         cursor: 'pointer',
         transition: 'all 0.15s',
-        fontFamily: "'Figtree',sans-serif",
+        fontFamily: "'Lato', sans-serif",
+        letterSpacing: '0.2px',
       }}
     >
       {children}
