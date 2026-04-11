@@ -1,13 +1,13 @@
 import { useState, useEffect, createContext, useContext } from 'react';
-import Navbar      from './components/Navbar';
+import Navbar      from './components/Navbar/Navbar';
 import AuthModal   from './components/AuthModal';
-import Home        from './pages/Home';
-import Dashboard   from './pages/Dashboard';
-import BookDetail  from './pages/BookDetail';
+import Home        from './pages/Home/Home';
+import Dashboard   from './pages/Dashboard/Dashboard';
+import BookDetail  from './pages/BookDetail/BookDetail';
 import Explore     from './pages/Explore';
 import Lists       from './pages/Lists';
-import Clubs       from './pages/Clubs';
-import Profile     from './pages/Profile';
+import Clubs       from './pages/Clubs/Clubs';
+import Profile     from './pages/Profile/Profile';
 import './index.css';
 
 const TOKEN_KEY = 'pb_token';
@@ -22,7 +22,6 @@ function parseJwt(t) {
   catch { return null; }
 }
 
-/** Update <title> and og:title meta tag dynamically */
 function useDynamicSEO(page, user) {
   useEffect(() => {
     const PAGE_TITLES = {
@@ -34,24 +33,12 @@ function useDynamicSEO(page, user) {
     };
 
     let title = PAGE_TITLES[page.name] || 'PaperBoxd';
-
-    // Enrich title for specific pages
-    if (page.name === 'book' && page.data?.title) {
-      title = `${page.data.title} – PaperBoxd`;
-    }
-    if (page.name === 'profile' && page.data) {
-      title = `@${page.data} – PaperBoxd`;
-    }
+    if (page.name === 'book'    && page.data?.title) title = `${page.data.title} – PaperBoxd`;
+    if (page.name === 'profile' && page.data)        title = `@${page.data} – PaperBoxd`;
 
     document.title = title;
-
-    // Update og:title if present
-    const ogTitle = document.querySelector('meta[property="og:title"]');
-    if (ogTitle) ogTitle.setAttribute('content', title);
-
-    // Update twitter:title if present
-    const twTitle = document.querySelector('meta[name="twitter:title"]');
-    if (twTitle) twTitle.setAttribute('content', title);
+    document.querySelector('meta[property="og:title"]')?.setAttribute('content', title);
+    document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', title);
   }, [page, user]);
 }
 
