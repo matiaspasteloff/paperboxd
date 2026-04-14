@@ -42,8 +42,50 @@ export const SUBJECT_QUERY_MAP = {
   classics: 'subject:classics',
 };
 
-/** Fetch from Google Books and return adapted books filtered to those with covers */
-export const gbFetch = async (params, maxResults = 16) => {
+/**
+ * Returns true only for covers that are likely to be real, full-quality images.
+ * Google Books sometimes returns blurry scanned snippet thumbnails that look bad.
+ */
+const isGoodCover = (url) => {
+  if (!url) return false;
+  // Reject edge=curl: these are the "curled page" snippet scans — always blurry
+  if (url.includes('edge=curl')) return false;
+  // Reject raw GBS snippet images that have no zoom parameter — usually low-res scans
+  if (url.includes('books.google') && !url.includes('zoom=') && url.includes('img=1')) return false;
+  return true;
+};
+
+/**
+ * Returns a weekly-rotating trending query so the home page feels fresh each week.
+ * Uses the ISO week number so it changes every Monday automatically.
+ */
+const getWeeklyTrendingQuery = () => {
+  const now = new Date();
+  // ISO week number: 1-52
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const week = Math.ceil(((now - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
+
+  const rotatingQueries = [
+    'bestseller literary fiction 2024',
+    'award winning novels 2024',
+    'most read books 2024 fiction',
+    'popular thriller mystery 2024',
+    'debut novels bestseller 2024',
+    'book club picks 2024',
+    'new releases fiction 2024',
+    'critically acclaimed novels 2024',
+    'pulitzer prize fiction',
+    'booker prize shortlist',
+    'oprah book club 2024',
+    'most anticipated books 2024',
+  ];
+
+  const index = week % rotatingQueries.length;
+  return rotatingQueries[index];
+};
+
+/** Fetch from Google Books and return adapted books filtered to those with good covers */
+export const gbFetch = async (params, maxResults = 20) => {
   const qs = new URLSearchParams({
     printType: 'books',
     maxResults: String(maxResults),
@@ -53,7 +95,14 @@ export const gbFetch = async (params, maxResults = 16) => {
   try {
     const r = await fetch(`${GB}/volumes?${qs}`);
     const d = await r.json();
-    return (d.items || []).map(adaptGoogleBook).filter(b => b && b.cover_url);
+    return (d.items || [])
+      .map(adaptGoogleBook)
+      .filter(b => {
+        if (!b || !b.cover_url) return false;
+        if (!isGoodCover(b.cover_url)) return false;
+        if (!b.title || b.title.length < 2) return false;
+        return true;
+      });
   } catch {
     return [];
   }
@@ -68,3 +117,5 @@ export const getBookDetails = async (volumeId) => {
     return null;
   }
 };
+
+export { getWeeklyTrendingQuery };
