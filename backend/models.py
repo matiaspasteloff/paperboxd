@@ -10,15 +10,13 @@ class User(Base):
     username        = Column(String(50), unique=True, index=True)
     email           = Column(String(100), unique=True, index=True)
     hashed_password = Column(String(255))
-    is_verified     = Column(Boolean, default=False)   # ← NEW
-    # Profile
+    is_verified     = Column(Boolean, default=False)
     bio             = Column(Text, default="")
     avatar_color    = Column(String(20), default="#c8943a")
     favorite_genres = Column(String(300), default="")
     favorite_moods  = Column(String(300), default="")
     location        = Column(String(100), default="")
     website         = Column(String(200), default="")
-    # Settings
     theme           = Column(String(20), default="parchment")
     reading_goal    = Column(Integer, default=0)
     is_private      = Column(Boolean, default=False)
@@ -62,6 +60,9 @@ class Review(Base):
     mood_tags            = Column(String(200), default="")
     pace_tag             = Column(String(20), default="")
     genre                = Column(String(50), default="")
+    # Stored at review-time so we never need to re-fetch the book API
+    book_title           = Column(String(300), nullable=True)
+    cover_url            = Column(String(500), nullable=True)
 
     __table_args__ = (
         Index("ix_review_work_id",        "open_library_work_id"),

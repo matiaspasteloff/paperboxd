@@ -18,14 +18,24 @@ export default function ReviewModal({ book, token, onClose, onSuccess }) {
   const [error,         setError]   = useState('');
 
   const workId   = book.key?.replace('/works/', '') || '';
-  const coverUrl = book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg` : null;
+  const coverUrl = book.cover_url || (book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg` : null);
   const toggleMood = (m) => setMoods(p => p.includes(m) ? p.filter(x => x !== m) : [...p, m]);
 
   const submit = async () => {
     if (!rating) { setError('Seleccioná al menos 1 estrella'); return; }
     setLoading(true); setError('');
     try {
-      await api.createReview(token, { open_library_work_id: workId, rating, review_text: text.trim() || null, mood_tags: selectedMoods.join(','), pace_tag: pace, genre });
+      await api.createReview(token, {
+        open_library_work_id: workId,
+        rating,
+        review_text: text.trim() || null,
+        mood_tags: selectedMoods.join(','),
+        pace_tag: pace,
+        genre,
+        // Store these so the Library tab never needs to call an external API
+        book_title: book.title || null,
+        cover_url: coverUrl || null,
+      });
       onSuccess();
     } catch (err) { setError(err.message); }
     finally { setLoading(false); }

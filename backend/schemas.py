@@ -68,6 +68,9 @@ class ReviewCreate(BaseModel):
     mood_tags: Optional[str] = ""
     pace_tag: Optional[str] = ""
     genre: Optional[str] = ""
+    # Stored at write-time so we never need external API calls to show titles/covers
+    book_title: Optional[str] = None
+    cover_url: Optional[str] = None
 
 
 class ReviewResponse(BaseModel):

@@ -69,7 +69,10 @@ export const getStats = (token) =>
 export const getRecommendations = (token) =>
   call(`${BASE}/recommendations/`, { headers: h(token) });
 
-// IMPORTADOR DE GOODREADS
+// ── Latest community reviews (home page) ─────────────────────────────────────
+export const getLatestReviews = () =>
+  call(`${BASE}/reviews/latest`);
 
+// ── Goodreads importer ────────────────────────────────────────────────────────
 export const importGoodreads = (token, books) =>
   call(`${BASE}/import/goodreads`, { method: 'POST', headers: h(token), body: JSON.stringify({ books }) });
