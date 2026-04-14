@@ -56,12 +56,12 @@ export default function HeroSection({ query, setQuery, onSearch, user, hasResult
         marginBottom: '28px',
         color: 'var(--text)',
       }}>
-        Paper
+        Book
         <em style={{
           fontStyle: 'italic',
           color: 'var(--accent)',
           display: 'block',
-        }}>Boxd</em>
+        }}>Log</em>
       </h1>
 
       {/* Tagline */}

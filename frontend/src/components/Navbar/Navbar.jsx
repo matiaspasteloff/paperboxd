@@ -52,12 +52,12 @@ export default function Navbar({ user, page, navigate, onAuthClick, onLogout }) 
             fontFamily: "'Playfair Display', Georgia, serif",
             fontWeight: 700, fontSize: '18px', color: 'var(--text)',
             letterSpacing: '-0.3px',
-          }}>Paper</span>
+          }}>Book</span>
           <span style={{
             fontFamily: "'Playfair Display', Georgia, serif",
             fontWeight: 700, fontStyle: 'italic', fontSize: '18px',
             color: 'var(--accent)',
-          }}>Boxd</span>
+          }}>Log</span>
         </div>
 
         {/* Desktop center links */}
