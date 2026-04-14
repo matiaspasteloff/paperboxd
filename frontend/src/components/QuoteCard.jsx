@@ -3,11 +3,11 @@ import { api } from '../api';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const PALETTES = [
-  { id: 'night',  bg: '#030b16', text: '#ddeeff', accent: '#388bfd', label: '🌊 Noche' },
-  { id: 'sepia',  bg: '#1a1208', text: '#f0e8d0', accent: '#d4a355', label: '📜 Sepia' },
-  { id: 'noir',   bg: '#0a0a0a', text: '#f0f0f0', accent: '#c0ff00', label: '⚡ Noir' },
-  { id: 'dusk',   bg: '#1a0d2e', text: '#f0d8ff', accent: '#cc88ff', label: '🌅 Crepúsculo' },
-  { id: 'forest', bg: '#0d1a0d', text: '#d8f0d8', accent: '#55cc88', label: '🌿 Bosque' },
+  { id: 'night',  bg: '#030b16', text: '#ddeeff', accent: '#388bfd', label: 'Noche' },
+  { id: 'sepia',  bg: '#1a1208', text: '#f0e8d0', accent: '#d4a355', label: 'Sepia' },
+  { id: 'noir',   bg: '#0a0a0a', text: '#f0f0f0', accent: '#c0ff00', label: 'Noir' },
+  { id: 'dusk',   bg: '#1a0d2e', text: '#f0d8ff', accent: '#cc88ff', label: 'Crepúsculo' },
+  { id: 'forest', bg: '#0d1a0d', text: '#d8f0d8', accent: '#55cc88', label: 'Bosque' },
 ];
 
 export default function QuoteCard({ token, onClose }) {

@@ -1,12 +1,12 @@
 const MOOD_FILTERS = [
-  { id: 'oscuro',      label: '🌑 Oscuro',     query: 'dark literature fiction' },
-  { id: 'emotivo',     label: '💧 Emotivo',     query: 'emotional drama fiction' },
-  { id: 'relajante',   label: '🌿 Relajante',   query: 'cozy slice of life' },
-  { id: 'épico',       label: '⚔️ Épico',       query: 'epic fantasy adventure' },
-  { id: 'misterioso',  label: '🔍 Misterioso',  query: 'mystery thriller suspense' },
-  { id: 'filosófico',  label: '🧠 Filosófico',  query: 'philosophy essays ideas' },
-  { id: 'romántico',   label: '💕 Romántico',   query: 'romance love story' },
-  { id: 'humorístico', label: '😄 Humor',       query: 'humor comedy fiction' },
+  { id: 'oscuro',      label: 'Oscuro',     query: 'dark literature fiction' },
+  { id: 'emotivo',     label: 'Emotivo',     query: 'emotional drama fiction' },
+  { id: 'relajante',   label: 'Relajante',   query: 'cozy slice of life' },
+  { id: 'épico',       label: 'Épico',       query: 'epic fantasy adventure' },
+  { id: 'misterioso',  label: 'Misterioso',  query: 'mystery thriller suspense' },
+  { id: 'filosófico',  label: 'Filosófico',  query: 'philosophy essays ideas' },
+  { id: 'romántico',   label: 'Romántico',   query: 'romance love story' },
+  { id: 'humorístico', label: 'Humor',       query: 'humor comedy fiction' },
 ];
 
 export { MOOD_FILTERS };
