@@ -7,17 +7,14 @@ const LIBRO_TAG = 'paperboxd';      // ← id de afiliado de libro.net (si aplic
 
 // ── URL builders ─────────────────────────────────────────────────────────────
 
-function buildAmazonUrl(title, author, isbn) {
-    if (isbn) {
-        return `https://www.amazon.com.ar/dp/${isbn}?tag=${AMAZON_TAG}`;
-    }
+function buildAmazonUrl(title, author) {
     const q = encodeURIComponent(`${title}${author ? ' ' + author : ''}`);
     return `https://www.amazon.com.ar/s?k=${q}&i=stripbooks&tag=${AMAZON_TAG}`;
 }
 
 function buildMercadoLibreUrl(title, author) {
-    const q = encodeURIComponent(`libro ${title}${author ? ' ' + author : ''}`);
-    return `https://www.mercadolibre.com.ar/search?q=${q}`;
+    const q = encodeURIComponent(`${title}${author ? ' ' + author : ''}`);
+    return `https://listado.mercadolibre.com.ar/${q}_Tipo_libro`;
 }
 
 function buildCasaDelLibroUrl(title, author) {
@@ -25,15 +22,13 @@ function buildCasaDelLibroUrl(title, author) {
     return `https://www.casadellibro.com/busqueda-generica?q=${q}`;
 }
 
-function buildGoogleBooksUrl(googleBooksId) {
-    if (googleBooksId) {
-        return `https://play.google.com/store/books/details?id=${googleBooksId}`;
-    }
-    return null;
+function buildGoogleBooksUrl(title, author, googleBooksId) {
+    if (googleBooksId) return `https://books.google.com/books?id=${googleBooksId}`;
+    const q = encodeURIComponent(`${title}${author ? ' ' + author : ''}`);
+    return `https://books.google.com/books?q=${q}`;
 }
 
 function buildLibraryUrl(title, author) {
-    // WorldCat para encontrar en biblioteca local
     const q = encodeURIComponent(`${title}${author ? ' ' + author : ''}`);
     return `https://www.worldcat.org/search?q=${q}`;
 }
@@ -132,7 +127,7 @@ export default function BuyBookLinks({ book, compact = false, showLibrary = true
             featured: true,
         },
         {
-            href: buildAmazonUrl(title, author, isbn),
+            href: buildAmazonUrl(title, author),
             icon: '📦',
             label: 'Amazon.ar',
             sublabel: 'Con envío',
@@ -148,7 +143,7 @@ export default function BuyBookLinks({ book, compact = false, showLibrary = true
             featured: false,
         },
         gbUrl && {
-            href: gbUrl,
+            href: buildGoogleBooksUrl(title, author, gbId),
             icon: '📱',
             label: 'Google Books',
             sublabel: 'Versión digital',
