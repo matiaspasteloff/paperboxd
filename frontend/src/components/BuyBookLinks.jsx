@@ -9,10 +9,10 @@ const LIBRO_TAG = 'paperboxd';      // ← id de afiliado de libro.net (si aplic
 
 function buildAmazonUrl(title, author, isbn) {
     if (isbn) {
-        return `https://www.amazon.com/dp/${isbn}?tag=${AMAZON_TAG}`;
+        return `https://www.amazon.com.ar/dp/${isbn}?tag=${AMAZON_TAG}`;
     }
     const q = encodeURIComponent(`${title}${author ? ' ' + author : ''}`);
-    return `https://www.amazon.com/s?k=${q}&i=stripbooks&tag=${AMAZON_TAG}`;
+    return `https://www.amazon.com.ar/s?k=${q}&i=stripbooks&tag=${AMAZON_TAG}`;
 }
 
 function buildMercadoLibreUrl(title, author) {
@@ -123,20 +123,20 @@ export default function BuyBookLinks({ book, compact = false, showLibrary = true
     const isAR = true; // podés detectar por geolocalización si querés
 
     const stores = [
-        {
-            href: buildAmazonUrl(title, author, isbn),
-            icon: '📦',
-            label: 'Amazon',
-            sublabel: 'Con envío',
-            accent: '#ff9900',
-            featured: true,
-        },
         isAR && {
             href: buildMercadoLibreUrl(title, author),
             icon: '🛒',
             label: 'MercadoLibre',
             sublabel: 'Envío gratis',
             accent: '#ffe600',
+            featured: true,
+        },
+        {
+            href: buildAmazonUrl(title, author, isbn),
+            icon: '📦',
+            label: 'Amazon.ar',
+            sublabel: 'Con envío',
+            accent: '#ff9900',
             featured: false,
         },
         {
