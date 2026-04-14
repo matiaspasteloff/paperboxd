@@ -8,6 +8,7 @@ import Explore     from './pages/Explore';
 import Lists       from './pages/Lists';
 import Clubs       from './pages/Clubs/Clubs';
 import Profile     from './pages/Profile/Profile';
+import { api }     from './api';
 import './index.css';
 
 const TOKEN_KEY = 'pb_token';
@@ -61,7 +62,21 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', theme);
     if (token) {
       const p = parseJwt(token);
-      if (!p || p.exp * 1000 < Date.now()) logout();
+      if (!p || p.exp * 1000 < Date.now()) {
+        logout();
+      } else {
+        // Refresh user data from server to ensure username is correct
+        api.getMe(token).then(me => {
+          const updated = {
+            email: me.email,
+            username: me.username,
+            avatar_color: me.avatar_color,
+            reading_goal: me.reading_goal,
+          };
+          setUser(updated);
+          localStorage.setItem(USER_KEY, JSON.stringify(updated));
+        }).catch(() => {});
+      }
     }
   }, []);
 
@@ -70,10 +85,21 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const login = (accessToken) => {
-    const payload  = parseJwt(accessToken);
-    const email    = payload?.sub || '';
-    const userData = { email, username: email.split('@')[0] };
+  const login = async (accessToken) => {
+    const payload = parseJwt(accessToken);
+    const email   = payload?.sub || '';
+    // Start with a fallback derived from email
+    let userData  = { email, username: email.split('@')[0] };
+    try {
+      // Fetch real profile from server so username is always correct
+      const me = await api.getMe(accessToken);
+      userData = {
+        email:        me.email,
+        username:     me.username,
+        avatar_color: me.avatar_color,
+        reading_goal: me.reading_goal,
+      };
+    } catch {}
     setToken(accessToken);
     setUser(userData);
     localStorage.setItem(TOKEN_KEY, accessToken);

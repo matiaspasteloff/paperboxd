@@ -1,14 +1,95 @@
-import asyncio
-import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from database import get_db
 import models, schemas
-from cache import cache_get, cache_set, cache_invalidate
 from routers.deps import get_current_user
 
 router = APIRouter()
+
+
+@router.get("/progress/")
+def get_progress(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    return db.query(models.ReadingProgress)\
+             .filter(models.ReadingProgress.user_id == current_user.id)\
+             .order_by(models.ReadingProgress.id.desc())\
+             .all()
+
+
+@router.post("/progress/")
+def add_progress(
+    data: schemas.ProgressCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    # Update if already exists
+    existing = db.query(models.ReadingProgress).filter(
+        models.ReadingProgress.user_id == current_user.id,
+        models.ReadingProgress.open_library_work_id == data.open_library_work_id,
+    ).first()
+
+    if existing:
+        existing.book_title   = data.book_title
+        existing.cover_url    = data.cover_url
+        existing.total_pages  = data.total_pages
+        existing.current_page = data.current_page
+        existing.status       = data.status
+        db.commit()
+        db.refresh(existing)
+        return existing
+
+    new = models.ReadingProgress(**data.dict(), user_id=current_user.id)
+    db.add(new)
+    db.commit()
+    db.refresh(new)
+    return new
+
+
+@router.patch("/progress/{progress_id}")
+def update_progress(
+    progress_id: int,
+    data: schemas.ProgressUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    prog = db.query(models.ReadingProgress).filter(
+        models.ReadingProgress.id == progress_id,
+        models.ReadingProgress.user_id == current_user.id,
+    ).first()
+    if not prog:
+        raise HTTPException(404, "Progreso no encontrado")
+
+    for field, value in data.dict(exclude_none=True).items():
+        setattr(prog, field, value)
+    db.commit()
+    db.refresh(prog)
+    return prog
+
+
+@router.delete("/progress/{progress_id}")
+def delete_progress(
+    progress_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    prog = db.query(models.ReadingProgress).filter(
+        models.ReadingProgress.id == progress_id,
+        models.ReadingProgress.user_id == current_user.id,
+    ).first()
+    if not prog:
+        raise HTTPException(404, "Progreso no encontrado")
+    db.delete(prog)
+    db.commit()
+    return {"ok": True}
+
+
+# ── Book reviews (kept here so main.py include_router works) ──────────────────
+import asyncio
+import httpx
+from cache import cache_get, cache_set, cache_invalidate
 
 
 async def fetch_book_data(work_id: str) -> dict:

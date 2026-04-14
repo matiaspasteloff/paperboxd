@@ -1,18 +1,3 @@
-"""
-Google OAuth via ID Token verification.
-The frontend uses Google Identity Services (One Tap / popup),
-gets an id_token, and sends it here for verification.
-
-Required env vars:
-  GOOGLE_CLIENT_ID  – tu OAuth 2.0 client ID de Google Cloud Console
-
-Steps to get GOOGLE_CLIENT_ID:
-  1. console.cloud.google.com → APIs & Services → Credentials
-  2. Create OAuth 2.0 Client ID (Web application)
-  3. Add your frontend URL to Authorized JavaScript origins
-  4. Copy the Client ID (ends in .apps.googleusercontent.com)
-"""
-
 import os
 import httpx
 from fastapi import APIRouter, HTTPException, Depends
