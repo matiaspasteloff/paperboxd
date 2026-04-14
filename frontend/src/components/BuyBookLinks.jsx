@@ -108,7 +108,7 @@ function StoreButton({ href, icon, label, sublabel, accent, featured = false }) 
 /**
  * BuyBookLinks
  * Props:
- *   book        – objeto libro de PaperBoxd (title, author_name, isbn, google_books_id)
+ *   book        – objeto libro de BookLog (title, author_name, isbn, google_books_id)
  *   compact     – versión compacta (solo íconos + texto corto)
  *   showLibrary – mostrar link a WorldCat (biblioteca)
  */
@@ -265,7 +265,7 @@ export default function BuyBookLinks({ book, compact = false, showLibrary = true
                 lineHeight: 1.5,
                 fontStyle: 'italic',
             }}>
-                Los precios y disponibilidad pueden variar. PaperBoxd puede recibir una comisión por compras a través de links de afiliado, sin costo adicional para vos.
+                Los precios y disponibilidad pueden variar. BookLog puede recibir una comisión por compras a través de links de afiliado, sin costo adicional para vos.
             </p>
         </div>
     );

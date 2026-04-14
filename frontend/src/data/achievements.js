@@ -1,5 +1,5 @@
 // frontend/src/data/achievements.js
-// Sistema de logros/badges para PaperBoxd
+// Sistema de logros/badges para BookLog
 
 export const ACHIEVEMENTS = [
     // ── Lectura ──────────────────────────────────────────────────────────

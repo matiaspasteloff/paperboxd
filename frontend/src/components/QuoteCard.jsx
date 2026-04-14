@@ -57,7 +57,7 @@ export default function QuoteCard({ token, onClose }) {
       ctx.fillText('Escribí una cita para previsualizar...', 80, 220);
     }
     ctx.font = '600 13px system-ui, sans-serif'; ctx.fillStyle = palette.accent + '88';
-    ctx.fillText('PaperBoxd', W - 120, H - 30);
+    ctx.fillText('BookLog', W - 120, H - 30);
   };
 
   const download = () => {

@@ -26,16 +26,16 @@ function parseJwt(t) {
 function useDynamicSEO(page, user) {
   useEffect(() => {
     const PAGE_TITLES = {
-      home:      'PaperBoxd – Tu diario de lectura personal',
-      explore:   'Explorar libros – PaperBoxd',
-      lists:     'Listas temáticas – PaperBoxd',
-      clubs:     'Clubes de Lectura – PaperBoxd',
-      dashboard: user ? `@${user.username} · Mi biblioteca – PaperBoxd` : 'Mi biblioteca – PaperBoxd',
+      home:      'BookLog – Tu diario de lectura personal',
+      explore:   'Explorar libros – BookLog',
+      lists:     'Listas temáticas – BookLog',
+      clubs:     'Clubes de Lectura – BookLog',
+      dashboard: user ? `@${user.username} · Mi biblioteca – BookLog` : 'Mi biblioteca – BookLog',
     };
 
-    let title = PAGE_TITLES[page.name] || 'PaperBoxd';
-    if (page.name === 'book'    && page.data?.title) title = `${page.data.title} – PaperBoxd`;
-    if (page.name === 'profile' && page.data)        title = `@${page.data} – PaperBoxd`;
+    let title = PAGE_TITLES[page.name] || 'BookLog';
+    if (page.name === 'book'    && page.data?.title) title = `${page.data.title} – BookLog`;
+    if (page.name === 'profile' && page.data)        title = `@${page.data} – BookLog`;
 
     document.title = title;
     document.querySelector('meta[property="og:title"]')?.setAttribute('content', title);

@@ -2,7 +2,7 @@ const API_KEY = import.meta.env.VITE_GOOGLE_BOOKS_API_KEY;
 const GB = 'https://www.googleapis.com/books/v1';
 
 /**
- * Adapts a Google Books API volume item to PaperBoxd's internal book format.
+ * Adapts a Google Books API volume item to BookLog's internal book format.
  * Maintains backward compatibility with OpenLibrary-based components.
  */
 export const adaptGoogleBook = (item) => {

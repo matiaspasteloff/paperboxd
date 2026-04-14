@@ -295,7 +295,7 @@ export default function GoodreadsImporter({ token, onClose, onSuccess }) {
             <div style={{ textAlign: 'center', padding: '40px 20px' }}>
               <div style={{ fontSize: '56px', marginBottom: '16px' }}>🎉</div>
               <h3 style={{ fontSize: '22px', marginBottom: '8px' }}>¡Importación exitosa!</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '28px' }}>Tu biblioteca de GoodReads ya está en PaperBoxd</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '28px' }}>Tu biblioteca de GoodReads ya está en BookLog</p>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '28px', maxWidth: '420px', margin: '0 auto 28px' }}>
                 {[

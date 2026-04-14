@@ -155,7 +155,7 @@ export default function AuthModal({ onClose, onSuccess }) {
                     <h2 style={{ fontSize: '20px', marginBottom: '5px' }}>
                         {mode === 'login' ? 'Bienvenido de vuelta' : 'Crear cuenta'}
                     </h2>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>PaperBoxd · Tu diario de lectura</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>BookLog · Tu diario de lectura</p>
                 </div>
 
                 {/* Mode tabs */}
