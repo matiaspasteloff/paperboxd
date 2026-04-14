@@ -5,14 +5,14 @@ import ReviewModal from '../components/ReviewModal';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const SUBJECTS = [
-  { id: 'science_fiction', label: '🚀 Ciencia Ficción' },
-  { id: 'fantasy',         label: '⚔️ Fantasía' },
-  { id: 'mystery',         label: '🔍 Misterio' },
-  { id: 'romance',         label: '💕 Romance' },
-  { id: 'history',         label: '📜 Historia' },
-  { id: 'biography',       label: '👤 Biografía' },
-  { id: 'horror',          label: '👻 Terror' },
-  { id: 'classics',        label: '📖 Clásicos' },
+  { id: 'science_fiction', label: 'Ciencia Ficción' },
+  { id: 'fantasy',         label: 'Fantasía' },
+  { id: 'mystery',         label: 'Misterio' },
+  { id: 'romance',         label: 'Romance' },
+  { id: 'history',         label: 'Historia' },
+  { id: 'biography',       label: 'Biografía' },
+  { id: 'horror',          label: 'Terror' },
+  { id: 'classics',        label: 'Clásicos' },
 ];
 
 export default function Explore({ user, token, onAuthClick, navigate }) {
