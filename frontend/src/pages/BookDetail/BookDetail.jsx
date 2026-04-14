@@ -5,6 +5,7 @@ import { useToast } from '../../hooks/useToast';
 import Toast from '../../components/ui/Toast';
 import ReviewModal from '../../components/ReviewModal';
 import ProgressModal from '../../components/ProgressModal';
+import BuyBookLinks from '../../components/BuyBookLinks';
 import BookHeader from './BookHeader';
 import ReviewsList from './ReviewsList';
 import DNFModal from './DNFModal';
@@ -78,6 +79,10 @@ export default function BookDetail({ book, user, token, onAuthClick, navigate })
           </div>
         </div>
       )}
+
+      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: `0 ${pad} 28px` }}>
+        <BuyBookLinks book={merged} compact={isMobile} showLibrary={true} />
+      </div>
 
       <ReviewsList reviews={reviews} loading={loading} isMobile={isMobile} />
 
